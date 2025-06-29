@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- PWA Theme Color -->
+    <meta name="theme-color" content="#2c1f1f">
+    <title>每日占卜 | Crystal Ball</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <!-- PWA Manifest and Icons will be injected by script -->
+    <style>
+        :root {
+            --bg-color: #2c1f1f;
+            --text-color: #f0e6d2;
+            --accent-color: #e6a23c;
+            --wood-texture: repeating-linear-gradient(45deg, #4a3838, #4a3838 10px, #3e2e2e 10px, #3e2e2e 20px);
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        html, body { height: 100%; overflow: hidden; }
+        body {
+            font-family: 'Noto Serif SC', serif;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-image: var(--wood-texture);
+        }
+
+        .app-container {
+            width: 100%; height: 100%;
+            max-width: 450px; max-height: 800px;
+            background: #3a2a2a;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5);
+            overflow: hidden; position: relative;
+        }
+
+        #install-button {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: none; /* Hidden by default */
+        }
+        
+        .screen {
+            position: absolute; width: 100%; height: 100%;
+            display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 30px; text-align: center;
+            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
+        }
+        .screen.hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
+
+        /* --- Screen 1: Crystal Ball --- */
+        #screen1 { background: radial-gradient(circle at center, #5a4a4a, var(--bg-color) 70%); }
+        .cabin-button {
+            position: absolute; top: 20px; right: 20px;
+            background: none; border: none; cursor: pointer; z-index: 10; padding: 10px;
+        }
+        .cabin-button svg { width: 32px; height: 32px; fill: var(--text-color); transition: transform 0.3s; }
+        .cabin-button:hover svg { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--accent-color)); }
+        .title { font-size: 2rem; font-weight: 700; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-color); }
+        .crystal-ball-container { position: relative; cursor: pointer; filter: drop-shadow(0 15px 20px rgba(0,0,0,0.4)); animation: float 6s ease-in-out infinite; }
+        .crystal-ball {
+            width: 250px; height: 250px; border-radius: 50%;
+            background: linear-gradient(135deg, #ff00ff, #00ffff, #ffff00, #ff00ff);
+            background-size: 400% 400%;
+            animation: gradient-flow 10s ease infinite, sparkle 1.5s infinite alternate;
+            position: relative; overflow: hidden;
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            box-shadow: inset 0 0 50px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.2);
+        }
+        .crystal-ball::before {
+            content: ''; position: absolute; top: 10px; left: 50%;
+            transform: translateX(-50%); width: 60%; height: 30%;
+            background: radial-gradient(circle, rgba(255,255,255,0.6) 0%, rgba(255,255,255,0) 70%);
+            border-radius: 50%;
+        }
+        .ball-stand {
+            width: 120px; height: 40px; background: #251a1a;
+            border-radius: 10px 10px 50% 50% / 10px 10px 20px 20px;
+            margin-top: -20px; box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
+            position: relative; z-index: -1;
+        }
+        .info-text { margin-top: 30px; font-size: 1rem; max-width: 80%; line-height: 1.6; }
+
+        /* --- Overlays: Birthday Form & Modals --- */
+        .overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
+            z-index: 100; display: flex; flex-direction: column;
+            justify-content: center; align-items: center;
+            padding: 20px; transition: opacity 0.5s;
+        }
+        .overlay.hidden { opacity: 0; pointer-events: none; }
+        .form-content, .modal-content {
+            background: rgba(44, 31, 31, 0.9); padding: 30px;
+            border-radius: 15px; text-align: center;
+            width: 90%; max-width: 380px;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .form-content h2, .modal-content h3 { margin-bottom: 20px; color: var(--accent-color); }
+        .form-content .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
+        .form-content input, .form-content select {
+            padding: 12px; border-radius: 8px; border: 2px solid var(--accent-color);
+            background: rgba(0,0,0,0.3); color: var(--text-color);
+            font-size: 1rem; width: 100%;
+        }
+        .modal-content p { line-height: 1.7; margin-bottom: 20px; }
+        .btn-primary {
+            padding: 12px 25px; border-radius: 8px; border: none;
+            background: var(--accent-color); color: var(--bg-color);
+            font-size: 1rem; font-weight: bold; cursor: pointer;
+            transition: all 0.3s ease; margin-top: 10px;
+        }
+        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--accent-color); }
+
+        /* --- Screen 2: Cabin/Profile --- */
+        #screen2 {
+            background: linear-gradient(180deg, #3a2a2a, #201515);
+            justify-content: flex-start; padding-top: 70px; overflow-y: auto;
+        }
+        .back-button {
+            position: absolute; top: 20px; left: 20px; background: none; border: none;
+            color: var(--text-color); font-size: 2rem; cursor: pointer; z-index: 10;
+        }
+        .results-content { display: flex; flex-direction: column; gap: 20px; width: 100%; padding-bottom: 30px; }
+        .result-card { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; border-left: 5px solid var(--accent-color); }
+        .result-card h3 {
+            margin-bottom: 10px; color: var(--accent-color); font-size: 1.2rem;
+            display: flex; align-items: center; justify-content: space-between;
+        }
+        .result-card h3 .explanation { font-size: 0.8rem; color: #ccc; font-weight: 400; }
+        .result-card p, .result-card li { font-size: 0.95rem; line-height: 1.7; text-align: left; }
+        .signs-display { display: flex; justify-content: space-around; text-align: center; }
+        .sign { font-size: 1rem; }
+        .sign .emoji { font-size: 2.5rem; display: block; margin-bottom: 5px; }
+        #todo-list { list-style: none; padding-left: 0; }
+        #todo-list li { margin-bottom: 10px; padding-left: 1.5em; position: relative; }
+        #todo-list li::before {
+            content: '✧'; position: absolute; left: 0; color: var(--accent-color);
+        }
+        #llm-textarea {
+            width: 100%; min-height: 80px; background: rgba(0,0,0,0.3); border: 1px solid #555;
+            border-radius: 8px; color: var(--text-color); padding: 10px; font-size: 1rem; margin-bottom: 10px;
+        }
+        #llm-counter { font-size: 0.8rem; color: #aaa; margin-top: 10px; }
+        .ad-space {
+            width: 90%; height: 60px; background: #111; border: 2px dashed #444;
+            display: flex; justify-content: center; align-items: center; color: #666;
+            margin-top: 15px; align-self: center; flex-shrink: 0;
+        }
+        
+        @keyframes gradient-flow { 0% { background-position: 0% 50%; } 50% { background-position: 100% 50%; } 100% { background-position: 0% 50%; } }
+        @keyframes sparkle { from { box-shadow: inset 0 0 50px rgba(0,0,0,0.3), 0 0 20px rgba(255,255,255,0.2), 0 0 30px rgba(255,255,100,0.3); } to { box-shadow: inset 0 0 50px rgba(0,0,0,0.5), 0 0 20px rgba(255,255,255,0.4), 0 0 40px rgba(100,255,255,0.5); } }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+    </style>
+</head>
+<body>
+    <div class="app-container" id="app-container">
+        <!-- Screen 1: Crystal Ball -->
+        <div class="screen" id="screen1">
+            <button class="cabin-button" id="cabin-button" title="进入小屋">
+                <svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg>
+            </button>
+            <h1 class="title">每日占卜</h1>
+            <div class="crystal-ball-container" id="crystal-ball-container">
+                <div class="crystal-ball"></div><div class="ball-stand"></div>
+            </div>
+            <p class="info-text" id="info-text">轻触水晶球，揭示你今日的命运轨迹。</p>
+        </div>
+
+        <!-- Screen 2: Profile/Cabin -->
+        <div class="screen hidden" id="screen2">
+            <button class="back-button" id="back-button" title="返回">«</button>
+            <div class="results-content">
+                <div class="result-card">
+                    <h3>你的星辰图谱</h3>
+                    <div class="signs-display">
+                        <div class="sign">
+                            <span class="emoji" id="sun-emoji">☀️</span>
+                            <strong>太阳星座</strong> <span class="explanation">核心自我</span>
+                            <p id="sun-sign"></p>
+                        </div>
+                        <div class="sign">
+                            <span class="emoji" id="moon-emoji">🌙</span>
+                            <strong>月亮星座</strong> <span class="explanation">内在情绪</span>
+                            <p id="moon-sign"></p>
+                        </div>
+                        <div class="sign">
+                            <span class="emoji" id="rising-emoji">🌅</span>
+                            <strong>上升星座</strong> <span class="explanation">社交面具</span>
+                            <p id="rising-sign"></p>
+                        </div>
+                    </div>
+                </div>
+                <div class="result-card">
+                    <h3>通往理想自我的路径</h3>
+                    <ul id="todo-list"></ul>
+                </div>
+                <div class="result-card">
+                    <h3>与我对话</h3>
+                    <textarea id="llm-textarea" placeholder="告诉我你的想法，每周我会为你生成新的指引..."></textarea>
+                    <button id="llm-submit" class="btn-primary">发送</button>
+                    <p id="llm-counter"></p>
+                </div>
+                <div class="ad-space">广告位 (320x50)</div>
+            </div>
+        </div>
+        
+        <!-- Birthday form overlay -->
+        <div id="birthday-form" class="overlay hidden">
+            <div class="form-content">
+                <h2>魔法需要你的诞生时刻</h2>
+                <div class="input-group">
+                    <input type="date" id="birthdate-input" required>
+                    <input type="time" id="birthtime-input" required>
+                </div>
+                <select id="timezone-input"></select>
+                <button id="submit-birthday" class="btn-primary">确认时刻</button>
+            </div>
+        </div>
+
+        <!-- Fortune Modal -->
+        <div id="fortune-modal" class="overlay hidden">
+            <div class="modal-content">
+                <h3>今日运势</h3>
+                <p id="daily-fortune"></p>
+                <button id="close-modal" class="btn-primary">我明白了</button>
+            </div>
+        </div>
+
+        <button id="install-button" class="btn-primary">安装应用</button>
+    </div>
+
+    <script>
+    // --- PWA SETUP SCRIPT ---
+    // This script dynamically creates and registers the manifest and service worker
+    // to keep everything in a single HTML file for simplicity.
+    const pwaSetup = () => {
+        // 1. Create SVG icon as a base64 data URL
+        const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+            <defs><radialGradient id="grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8"/>
+            <stop offset="100%" style="stop-color:rgb(150,50,255);stop-opacity:1"/>
+            </radialGradient></defs>
+            <circle cx="50" cy="50" r="45" fill="url(#grad)" stroke="white" stroke-width="2"/>
+            <text x="50" y="65" font-size="40" text-anchor="middle" fill="white">🔮</text>
+        </svg>`;
+        // FIX: Correctly encode the SVG string to handle Unicode characters (like emojis) before base64 encoding.
+        const iconUrl = `data:image/svg+xml;base64,${btoa(unescape(encodeURIComponent(svgIcon)))}`;
+
+        // 2. Define the Web App Manifest
+        const manifest = {
+            "name": "每日占卜",
+            "short_name": "占卜",
+            "start_url": ".",
+            "display": "standalone",
+            "background_color": "#3a2a2a",
+            "theme_color": "#2c1f1f",
+            "description": "一个每日占卜和自我探索的应用。",
+            "icons": [
+                { "src": iconUrl, "sizes": "192x192", "type": "image/svg+xml" },
+                { "src": iconUrl, "sizes": "512x512", "type": "image/svg+xml" }
+            ]
+        };
+
+        // 3. Inject manifest link into the head
+        const manifestBlob = new Blob([JSON.stringify(manifest)], {type: 'application/json'});
+        const manifestUrl = URL.createObjectURL(manifestBlob);
+        const manifestLink = document.createElement('link');
+        manifestLink.rel = 'manifest';
+        manifestLink.href = manifestUrl;
+        document.head.appendChild(manifestLink);
+
+        // 4. Inject Apple touch icon link
+        const appleIconLink = document.createElement('link');
+        appleIconLink.rel = 'apple-touch-icon';
+        appleIconLink.href = iconUrl;
+        document.head.appendChild(appleIconLink);
+
+
+        // 5. Define and register the Service Worker
+        if ('serviceWorker' in navigator) {
+            const swCode = `
+                const CACHE_NAME = 'divination-app-cache-v1';
+                // Because this is a single-page app, we only need to cache the root.
+                const urlsToCache = ['/'];
+
+                self.addEventListener('install', event => {
+                    event.waitUntil(
+                        caches.open(CACHE_NAME)
+                            .then(cache => {
+                                console.log('Opened cache');
+                                // The fetch for '/' might fail if served from a file:// URL during local dev.
+                                // It's fine for production on a server.
+                                return cache.addAll(urlsToCache).catch(err => {
+                                    console.error('Failed to cache during install:', err);
+                                });
+                            })
+                    );
+                });
+
+                self.addEventListener('fetch', event => {
+                    // We only want to cache GET requests for our app pages
+                    if (event.request.method !== 'GET' || !event.request.url.startsWith('http')) {
+                        return;
+                    }
+                    
+                    event.respondWith(
+                        caches.match(event.request)
+                            .then(response => {
+                                // Cache hit - return response from cache
+                                if (response) {
+                                    return response;
+                                }
+                                // Not in cache - fetch from network
+                                return fetch(event.request);
+                            }
+                        )
+                    );
+                });
+            `;
+            const swBlob = new Blob([swCode], {type: 'application/javascript'});
+            const swUrl = URL.createObjectURL(swBlob);
+            navigator.serviceWorker.register(swUrl)
+                .then(registration => console.log('ServiceWorker registration successful with scope: ', registration.scope))
+                .catch(error => console.log('ServiceWorker registration failed: ', error));
+        }
+    };
+    pwaSetup();
+
+    // --- MAIN APP SCRIPT ---
+    document.addEventListener('DOMContentLoaded', () => {
+        // DOM Elements
+        const screens = {
+            s1: document.getElementById('screen1'),
+            s2: document.getElementById('screen2'),
+        };
+        const buttons = {
+            cabin: document.getElementById('cabin-button'),
+            back: document.getElementById('back-button'),
+            submitBirthday: document.getElementById('submit-birthday'),
+            closeModal: document.getElementById('close-modal'),
+            llmSubmit: document.getElementById('llm-submit'),
+            install: document.getElementById('install-button'),
+        };
+        const inputs = {
+            birthDate: document.getElementById('birthdate-input'),
+            birthTime: document.getElementById('birthtime-input'),
+            timezone: document.getElementById('timezone-input'),
+            llmText: document.getElementById('llm-textarea'),
+        };
+        const displays = {
+            infoText: document.getElementById('info-text'),
+            sunSign: document.getElementById('sun-sign'),
+            sunEmoji: document.getElementById('sun-emoji'),
+            moonSign: document.getElementById('moon-sign'),
+            moonEmoji: document.getElementById('moon-emoji'),
+            risingSign: document.getElementById('rising-sign'),
+            risingEmoji: document.getElementById('rising-emoji'),
+            todoList: document.getElementById('todo-list'),
+            dailyFortune: document.getElementById('daily-fortune'),
+            llmCounter: document.getElementById('llm-counter'),
+        };
+        const overlays = {
+            birthdayForm: document.getElementById('birthday-form'),
+            fortuneModal: document.getElementById('fortune-modal'),
+        };
+        const crystalBallContainer = document.getElementById('crystal-ball-container');
+
+        // --- PWA INSTALL PROMPT ---
+        let deferredPrompt;
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            buttons.install.style.display = 'block';
+        });
+        
+        buttons.install.addEventListener('click', (e) => {
+            buttons.install.style.display = 'none';
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                deferredPrompt.userChoice.then((choiceResult) => {
+                    if (choiceResult.outcome === 'accepted') {
+                        console.log('User accepted the install prompt');
+                    } else {
+                        console.log('User dismissed the install prompt');
+                    }
+                    deferredPrompt = null;
+                });
+            }
+        });
+
+        // --- DATA & STATE ---
+        let userData = {
+            birthDate: localStorage.getItem('userBirthDate'),
+            birthTime: localStorage.getItem('userBirthTime'),
+            timezone: localStorage.getItem('userTimeZone'),
+            lastDivinationDate: localStorage.getItem('lastDivinationDate'),
+            lastTodoListUpdate: localStorage.getItem('lastTodoListUpdate'),
+            weeklyTodos: JSON.parse(localStorage.getItem('weeklyTodos') || '[]'),
+            lastChatDate: localStorage.getItem('lastChatDate'),
+            chatCount: parseInt(localStorage.getItem('chatCount') || '0'),
+        };
+        
+        // --- INITIALIZATION ---
+        function initialize() {
+            populateTimezoneSelect();
+            checkInitialState();
+            setupEventListeners();
+        }
+
+        function populateTimezoneSelect() {
+            const timezones = { "UTC-12":-12, "UTC-11":-11, "UTC-10 (夏威夷)":-10, "UTC-9":-9, "UTC-8 (太平洋时间)":-8, "UTC-7 (山区时间)":-7, "UTC-6 (中部时间)":-6, "UTC-5 (东部时间)":-5, "UTC-4":-4, "UTC-3":-3, "UTC-2":-2, "UTC-1":-1, "UTC+0 (格林威治)":0, "UTC+1 (中欧)":1, "UTC+2":2, "UTC+3":3, "UTC+4":4, "UTC+5":5, "UTC+6":6, "UTC+7":7, "UTC+8 (北京/香港)":8, "UTC+9 (东京)":9, "UTC+10":10, "UTC+11":11, "UTC+12":12 };
+            for(const [name, offset] of Object.entries(timezones)){
+                const option = new Option(name, offset);
+                if (offset === 8) option.selected = true; // Default to UTC+8
+                inputs.timezone.add(option);
+            }
+        }
+        
+        function checkInitialState() {
+            const today = new Date().toDateString();
+            if(userData.lastChatDate !== today) {
+                userData.chatCount = 0;
+                localStorage.setItem('chatCount', 0);
+                userData.lastChatDate = today;
+                localStorage.setItem('lastChatDate', today);
+            }
+
+            if (!userData.birthDate || !userData.birthTime) {
+                overlays.birthdayForm.classList.remove('hidden');
+            } else {
+                overlays.birthdayForm.classList.add('hidden');
+                displayProfileData(); 
+            }
+            updateMainScreenInfo();
+            updateLLMCounter();
+        }
+
+        function updateMainScreenInfo() {
+            if (userData.lastDivinationDate === new Date().toDateString()) {
+                displays.infoText.textContent = '今天你已经占卜过了，明天再来探索吧。';
+                crystalBallContainer.style.cursor = 'not-allowed';
+            } else {
+                displays.infoText.textContent = '轻触水晶球，揭示你今日的命运轨迹。';
+                crystalBallContainer.style.cursor = 'pointer';
+            }
+        }
+        
+        function updateLLMCounter() {
+            displays.llmCounter.textContent = `今日剩余对话次数: ${3 - userData.chatCount}`;
+            buttons.llmSubmit.disabled = userData.chatCount >= 3;
+        }
+
+        // --- EVENT LISTENERS ---
+        function setupEventListeners() {
+            buttons.cabin.addEventListener('click', () => {
+                if (!userData.birthDate) {
+                     overlays.birthdayForm.classList.remove('hidden');
+                     return;
+                }
+                screens.s1.classList.add('hidden');
+                screens.s2.classList.remove('hidden');
+            });
+            
+            buttons.back.addEventListener('click', () => {
+                screens.s2.classList.add('hidden');
+                screens.s1.classList.remove('hidden');
+            });
+
+            buttons.submitBirthday.addEventListener('click', () => {
+                if (inputs.birthDate.value && inputs.birthTime.value) {
+                    userData.birthDate = inputs.birthDate.value;
+                    userData.birthTime = inputs.birthTime.value;
+                    userData.timezone = inputs.timezone.value;
+                    localStorage.setItem('userBirthDate', userData.birthDate);
+                    localStorage.setItem('userBirthTime', userData.birthTime);
+                    localStorage.setItem('userTimeZone', userData.timezone);
+                    
+                    overlays.birthdayForm.classList.add('hidden');
+                    displays.infoText.textContent = '感谢你，现在可以开始占卜了。';
+                    displayProfileData();
+                }
+            });
+
+            crystalBallContainer.addEventListener('click', () => {
+                if (!userData.birthDate) {
+                    overlays.birthdayForm.classList.remove('hidden');
+                    return;
+                }
+                const today = new Date().toDateString();
+                if (userData.lastDivinationDate === today) {
+                    displays.infoText.textContent = '水晶球累了，明天再来吧！';
+                    return;
+                }
+                userData.lastDivinationDate = today;
+                localStorage.setItem('lastDivinationDate', today);
+                displays.dailyFortune.textContent = getRandomItem(DATA.fortunes);
+                overlays.fortuneModal.classList.remove('hidden');
+            });
+
+            buttons.closeModal.addEventListener('click', () => {
+                overlays.fortuneModal.classList.add('hidden');
+                updateMainScreenInfo();
+            });
+
+            buttons.llmSubmit.addEventListener('click', handleLLMSubmit);
+        }
+
+        async function handleLLMSubmit() {
+            if (userData.chatCount >= 3 || !inputs.llmText.value) return;
+            
+            userData.chatCount++;
+            localStorage.setItem('chatCount', userData.chatCount);
+            updateLLMCounter();
+
+            const userInput = inputs.llmText.value;
+            inputs.llmText.value = "思考中...";
+            inputs.llmText.disabled = true;
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+            const llmResponse = "我已收到你的想法。这些珍贵的片段，将在下周的指引中为你点亮前路。";
+            
+            inputs.llmText.value = "";
+            alert(llmResponse);
+            inputs.llmText.disabled = false;
+        }
+
+        // --- DISPLAY LOGIC ---
+        function displayProfileData() {
+            if (!userData.birthDate) return;
+            const birthDateTime = new Date(`${userData.birthDate}T${userData.birthTime}`);
+            
+            const [sunSign, sunEmoji] = getSunSign(birthDateTime);
+            const [moonSign, moonEmoji] = getMoonSign(birthDateTime);
+            const [risingSign, risingEmoji] = getRisingSign(birthDateTime, parseInt(userData.timezone));
+
+            displays.sunSign.textContent = sunSign;
+            displays.sunEmoji.textContent = sunEmoji;
+            displays.moonSign.textContent = moonSign;
+            displays.moonEmoji.textContent = moonEmoji;
+            displays.risingSign.textContent = risingSign;
+            displays.risingEmoji.textContent = risingEmoji;
+            
+            generateAndDisplayTodos();
+        }
+
+        function generateAndDisplayTodos() {
+            const today = new Date();
+            const lastUpdate = new Date(userData.lastTodoListUpdate || 0);
+            const oneWeek = 7 * 24 * 60 * 60 * 1000;
+
+            if (today - lastUpdate > oneWeek) {
+                userData.weeklyTodos = [];
+                const availableTodos = [...DATA.todoPool];
+                for(let i=0; i<3; i++){
+                    const randomIndex = Math.floor(Math.random() * availableTodos.length);
+                    userData.weeklyTodos.push(availableTodos.splice(randomIndex, 1)[0]);
+                }
+                userData.lastTodoListUpdate = today.toISOString();
+                localStorage.setItem('weeklyTodos', JSON.stringify(userData.weeklyTodos));
+                localStorage.setItem('lastTodoListUpdate', userData.lastTodoListUpdate);
+            }
+            
+            displays.todoList.innerHTML = '';
+            userData.weeklyTodos.forEach(todo => {
+                const li = document.createElement('li');
+                li.textContent = todo;
+                displays.todoList.appendChild(li);
+            });
+        }
+        
+        // --- ASTROLOGY LOGIC (Pseudo-accurate) ---
+        const SIGNS = [
+            ["摩羯座", "♑️"], ["水瓶座", "♒️"], ["双鱼座", "♓️"], ["白羊座", "♈️"],
+            ["金牛座", "♉️"], ["双子座", "♊️"], ["巨蟹座", "♋️"], ["狮子座", "♌️"],
+            ["处女座", "♍️"], ["天秤座", "♎️"], ["天蝎座", "♏️"], ["射手座", "♐️"],
+        ];
+        function getSunSign(date) {
+            const m = date.getMonth() + 1; const d = date.getDate();
+            if((m==1&&d>=20)||(m==2&&d<=18)) return SIGNS[1]; if((m==2&&d>=19)||(m==3&&d<=20)) return SIGNS[2];
+            if((m==3&&d>=21)||(m==4&&d<=19)) return SIGNS[3]; if((m==4&&d>=20)||(m==5&&d<=20)) return SIGNS[4];
+            if((m==5&&d>=21)||(m==6&&d<=21)) return SIGNS[5]; if((m==6&&d>=22)||(m==7&&d<=22)) return SIGNS[6];
+            if((m==7&&d>=23)||(m==8&&d<=22)) return SIGNS[7]; if((m==8&&d>=23)||(m==9&&d<=22)) return SIGNS[8];
+            if((m==9&&d>=23)||(m==10&&d<=23)) return SIGNS[9]; if((m==10&&d>=24)||(m==11&&d<=22)) return SIGNS[10];
+            if((m==11&&d>=23)||(m==12&&d<=21)) return SIGNS[11]; if((m==12&&d>=22)||(m==1&&d<=19)) return SIGNS[0];
+        }
+        function getMoonSign(date) {
+            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
+            const signIndex = Math.floor((dayOfYear / 2.5) + date.getDay()) % 12;
+            return SIGNS[signIndex];
+        }
+        function getRisingSign(date, timezoneOffset) {
+            const utcHour = date.getUTCHours();
+            const localHour = (utcHour + timezoneOffset + 24) % 24;
+            const signIndex = (SIGNS.findIndex(s => s[0] === "白羊座") + Math.floor(localHour / 2)) % 12;
+            return SIGNS[signIndex];
+        }
+
+        // --- CONTENT DATABASES ---
+        const DATA = {
+            fortunes: ["今天，一颗被遗忘的创意种子将在你的脑海中发芽。","一次意想不到的对话将为你打开一扇新的大门。","一直困扰你的小烦恼，其实是一个伪装的礼物。","能量充沛！适合开始一项新计划或完成一项拖延已久的任务。","今天你的直觉异常敏锐。相信内心的第一个声音。","放慢脚步，享受当下。一杯热茶，一本好书，都能为你补充能量。","一个微小的善举，会像涟漪一样扩散，为你带来意想不到的好运。"],
+            todoPool: ["整理一个你经常使用的空间，无论是实体桌面还是电脑桌面。","花15分钟进行一次正念呼吸或冥想。","主动联系一位许久未见的朋友。","学习一个新技能的入门知识。","写下三个你今天感到感恩的瞬间。","进行一次20分钟的散步，不听音乐。","尝试做一道你从未做过的菜。","清理手机里不再需要的App和照片。","阅读一本书中让你有共鸣的章节。","为下周的工作或生活制定一个简单清晰的计划。"],
+        };
+
+        function getRandomItem(arr) {
+            return arr[Math.floor(Math.random() * arr.length)];
+        }
+
+        initialize();
+    });
+    </script>
+</body>
+</html>
