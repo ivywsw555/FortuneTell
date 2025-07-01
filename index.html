@@ -4,10 +4,21 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="theme-color" content="#2c1f1f">
-    <title>每日占卜 | Crystal Ball</title>
+    <title>每日占卜 | 3D Crystal Ball</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    
+    <!-- Import map for Three.js -->
+    <script type="importmap">
+        {
+            "imports": {
+                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
+            }
+        }
+    </script>
+
     <style>
         :root {
             --bg-color: #2c1f1f;
@@ -62,59 +73,37 @@
         .cabin-button svg { width: 32px; height: 32px; fill: var(--text-color); transition: transform 0.3s; }
         .cabin-button:hover svg { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--accent-color)); }
         .title { font-size: 2rem; font-weight: 700; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-color); }
-        .crystal-ball-container { position: relative; cursor: pointer; filter: drop-shadow(0 20px 25px rgba(0,0,0,0.5)); animation: float 6s ease-in-out infinite; }
-        .crystal-ball {
-            width: 250px;
-            height: 250px;
+        
+        /* Styles for the 3D Crystal Ball */
+        .crystal-ball-container { 
+            position: relative; 
+            cursor: pointer; 
+            width: 280px;
+            height: 280px;
+            filter: drop-shadow(0 20px 25px rgba(0,0,0,0.5)); 
+            animation: float 6s ease-in-out infinite;
+        }
+        /* This div will hold the Three.js canvas */
+        #three-canvas-container {
+            width: 100%;
+            height: 100%;
             border-radius: 50%;
-            position: relative;
-            overflow: hidden;
-            border: 2px solid rgba(180, 210, 255, 0.5);
-            box-shadow: inset 0 0 40px rgba(0,0,0,0.5), inset 0 0 15px #a389ff, 0 0 30px rgba(180, 220, 255, 0.4);
-            background-color: #1a1029;
+            overflow: hidden; /* Ensures canvas stays rounded */
         }
-        .crystal-ball::before {
-            content: '';
-            position: absolute;
-            width: 100%; height: 100%;
-            top: 0; left: 0;
-            background: radial-gradient(circle at 50% 50%, rgba(200, 220, 255, 0.8) 0%, rgba(150, 100, 255, 0.6) 25%, transparent 50%);
-            animation: pulse-glow 8s ease-in-out infinite;
-            mix-blend-mode: screen;
+        #three-canvas-container canvas {
+            display: block; /* Removes any default canvas margin */
         }
-        .crystal-ball::after {
-            content: '';
-            position: absolute;
-            width: 200%; height: 200%;
-            top: -50%; left: -50%;
-            background-image:
-                radial-gradient(circle, #ffffff 1px, transparent 1px),
-                radial-gradient(circle, #ffffff 1px, transparent 1px);
-            background-size: 50px 50px, 150px 150px;
-            background-position: 0 0, 25px 25px;
-            animation: rotate-particles 60s linear infinite;
-            opacity: 0.3;
-        }
-        .ball-highlight {
-            position: absolute;
-            top: 5px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 50%;
-            height: 25%;
-            background: radial-gradient(circle, rgba(255,255,255,0.8) 0%, rgba(255,255,255,0) 60%);
-            border-radius: 50%;
-            z-index: 2;
-            opacity: 0.9;
-        }
-        @keyframes pulse-glow { 0%, 100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; } }
-        @keyframes rotate-particles { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
+        
         .ball-stand {
             width: 120px; height: 40px; background: #251a1a;
             border-radius: 10px 10px 50% 50% / 10px 10px 20px 20px;
-            margin-top: -20px; box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
+            margin-top: -50px;
+            box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
             position: relative; z-index: -1;
-            left:65px;
+            left: 50%;
+            transform: translateX(-50%);
         }
         .info-text { margin-top: 30px; font-size: 1rem; max-width: 80%; line-height: 1.6; }
         .overlay {
@@ -158,8 +147,6 @@
         .todo-list li label::before { content: ''; position: absolute; left: 0; top: 2px; width: 20px; height: 20px; border: 2px solid var(--accent-color); border-radius: 4px; background-color: transparent; transition: all 0.2s; }
         .todo-list li input:checked + label::after { content: '✔'; position: absolute; left: 4px; top: 0; font-size: 16px; color: var(--accent-color); }
         .todo-list li input:checked + label { text-decoration: line-through; color: #888; }
-        
-        /* New Chat Interface Styles */
         .chat-container { display: flex; flex-direction: column; width: 100%; height: 250px; }
         #chat-window { flex-grow: 1; overflow-y: auto; padding: 10px; border-bottom: 1px solid #555; margin-bottom: 10px; }
         .chat-message { display: flex; margin-bottom: 10px; max-width: 85%; }
@@ -178,25 +165,204 @@
         #llm-input { flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid #555; border-radius: 20px; color: var(--text-color); padding: 10px 15px; font-size: 1rem; }
         #llm-send-btn { width: 50px; height: 44px; border-radius: 50%; border: none; background-color: var(--accent-color); color: #1a1029; font-size: 1.5rem; cursor: pointer; flex-shrink: 0; }
         #llm-counter { font-size: 0.8rem; color: #aaa; text-align: center; width: 100%; margin-top: 5px; }
-        
         .ad-space { width: 90%; height: 60px; background: #111; border: 2px dashed #444; display: flex; justify-content: center; align-items: center; color: #666; margin-top: 15px; align-self: center; flex-shrink: 0; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
     </style>
 </head>
 <body>
     <div class="app-container" id="app-container">
         <!-- Screen 1 -->
-        <div class="screen" id="screen1"><button class="cabin-button" id="cabin-button" title="进入小屋"><svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg></button><h1 class="title">每日占卜</h1><div class="crystal-ball-container" id="crystal-ball-container"><div class="crystal-ball"><div class="ball-highlight"></div></div><div class="ball-stand"></div></div><p class="info-text" id="info-text">轻触水晶球，揭示你今日的命运轨迹。</p></div>
+        <div class="screen" id="screen1">
+            <button class="cabin-button" id="cabin-button" title="进入小屋"><svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg></button>
+            <h1 class="title">每日占卜</h1>
+            <div class="crystal-ball-container" id="crystal-ball-container">
+                <!-- The 3D canvas will be inserted here by the script -->
+                <div id="three-canvas-container"></div>
+                <div class="ball-stand"></div>
+            </div>
+            <p class="info-text" id="info-text">轻触水晶球，揭示你今日的命运轨迹。</p>
+        </div>
+        
         <!-- Screen 2 -->
         <div class="screen hidden" id="screen2"><button class="back-button" id="back-button" title="返回">«</button><div class="results-content"><div class="result-card"><h3>你的星辰图谱</h3><div class="signs-display"><div class="sign"><span class="emoji" id="sun-emoji">☀️</span><strong>太阳星座</strong> <span class="explanation">核心自我</span><p id="sun-sign"></p></div><div class="sign"><span class="emoji" id="moon-emoji">🌙</span><strong>月亮星座</strong> <span class="explanation">内在情绪</span><p id="moon-sign"></p></div><div class="sign"><span class="emoji" id="rising-emoji">🌅</span><strong>上升星座</strong> <span class="explanation">社交面具</span><p id="rising-sign"></p></div></div></div><div class="result-card"><h3>通往理想自我的路径</h3><div class="todo-section"><h4>本周指引</h4><ul id="todo-list" class="todo-list"></ul></div><div class="todo-section"><h4>已完成</h4><ul id="completed-list" class="todo-list"></ul></div></div>
         <div class="result-card"><h3>与莉莉安(Lillia)对话</h3><div class="chat-container"><div id="chat-window"></div><div id="chat-input-area"><input type="text" id="llm-input" placeholder="告诉Lillia你的想法..."><button id="llm-send-btn">➤</button></div></div><p id="llm-counter"></p></div>
         <div class="ad-space">广告位 (320x50)</div></div></div>
+        
         <!-- Overlays -->
         <div id="birthday-form" class="overlay hidden"><div class="form-content"><h2>魔法需要你的诞生时刻</h2><div class="input-group"><input type="date" id="birthdate-input" required><input type="time" id="birthtime-input" required></div><select id="timezone-input"></select><button id="submit-birthday" class="btn-primary">确认时刻</button></div></div>
         <div id="fortune-modal" class="overlay hidden"><div class="modal-content"><h3>今日运势</h3><p id="daily-fortune"></p><div class="lucky-elements"><div id="lucky-color"></div><div id="lucky-number"></div></div><button id="close-modal" class="btn-primary">我明白了</button></div></div>
         <button id="install-button" class="btn-primary">安装应用</button>
     </div>
 
+    <!-- 3D Crystal Ball Script -->
+    <script type="module">
+        // Import necessary components from Three.js
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+
+        let scene, camera, renderer, controls;
+        let crystalBall, particleSystem;
+        let originalParticlePositions; // Store original positions for animation
+        const clock = new THREE.Clock();
+        let container; // The div that will hold our canvas
+
+        // --- Initialization ---
+        function init3D() {
+            container = document.getElementById('three-canvas-container');
+            if (!container) {
+                console.error("3D container not found!");
+                return;
+            }
+
+            // Scene setup
+            scene = new THREE.Scene();
+
+            // Camera setup
+            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
+            camera.position.z = 3.8; // Adjusted for a closer view within the container
+
+            // Renderer setup
+            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+            renderer.setSize(container.clientWidth, container.clientHeight);
+            renderer.setPixelRatio(window.devicePixelRatio);
+            renderer.setClearColor(0x000000, 0); // Transparent background
+            renderer.toneMapping = THREE.ACESFilmicToneMapping;
+            renderer.toneMappingExposure = 1.0;
+            container.appendChild(renderer.domElement);
+            
+            // Add an HDR environment map for realistic reflections and refractions
+            new RGBELoader()
+                .setPath('https://threejs.org/examples/textures/equirectangular/')
+                .load('venice_sunset_1k.hdr', function (texture) {
+                    texture.mapping = THREE.EquirectangularReflectionMapping;
+                    scene.environment = texture; 
+                });
+
+            // Controls setup
+            controls = new OrbitControls(camera, renderer.domElement);
+            controls.enableDamping = true; 
+            controls.dampingFactor = 0.04;
+            controls.screenSpacePanning = false;
+            controls.minDistance = 3;
+            controls.maxDistance = 10;
+            controls.autoRotate = true; // Let it spin slowly
+            controls.autoRotateSpeed = 0.5;
+            controls.enableZoom = false; // Disable zooming with scroll wheel
+            controls.target.set(0, 0, 0);
+
+            // --- Create Objects ---
+            createCrystalBall();
+            createParticles();
+            createLights();
+
+            // --- Event Listeners ---
+            window.addEventListener('resize', onWindowResize, false);
+            
+            // Start the animation loop
+            animate3D();
+        }
+
+        // --- Object Creation Functions ---
+        function createCrystalBall() {
+            const geometry = new THREE.SphereGeometry(1.5, 128, 128); 
+            const material = new THREE.MeshPhysicalMaterial({
+                roughness: 0,
+                metalness: 0,
+                transmission: 1.0, 
+                ior: 3.33, 
+                thickness: 3.0,
+                specularIntensity: 3,
+                envMapIntensity: 1.5
+            });
+            crystalBall = new THREE.Mesh(geometry, material);
+            scene.add(crystalBall);
+        }
+
+        function createParticles() {
+            const particleCount = 2000;
+            const positions = new Float32Array(particleCount * 3);
+            const colors = new Float32Array(particleCount * 3);
+            const baseColor = new THREE.Color(0x4a90e2);
+
+            for (let i = 0; i < particleCount; i++) {
+                const vert = new THREE.Vector3(
+                    (Math.random() - 0.5),
+                    (Math.random() - 0.5),
+                    (Math.random() - 0.5)
+                ).normalize().multiplyScalar(Math.random() * 1.4); // Keep particles inside the smaller ball
+
+                positions[i * 3] = vert.x;
+                positions[i * 3 + 1] = vert.y;
+                positions[i * 3 + 2] = vert.z;
+
+                const mixedColor = baseColor.clone();
+                mixedColor.lerp(new THREE.Color(0xd0021b), Math.random() * 0.6);
+                colors[i * 3] = mixedColor.r;
+                colors[i * 3 + 1] = mixedColor.g;
+                colors[i * 3 + 2] = mixedColor.b;
+            }
+            
+            originalParticlePositions = new Float32Array(positions);
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+            const material = new THREE.PointsMaterial({
+                size: 0.02,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                transparent: true,
+                opacity: 0.9,
+                depthWrite: false, 
+            });
+
+            particleSystem = new THREE.Points(geometry, material);
+            scene.add(particleSystem);
+        }
+
+        function createLights() {
+            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
+            hemiLight.position.set(0, 20, 0);
+            scene.add(hemiLight);
+        }
+
+        // --- Event Handlers ---
+        function onWindowResize() {
+            if (!container) return;
+            camera.aspect = container.clientWidth / container.clientHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(container.clientWidth, container.clientHeight);
+        }
+
+        // --- Animation Loop ---
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            const elapsedTime = clock.getElapsedTime();
+
+            if (particleSystem) {
+                const positions = particleSystem.geometry.attributes.position.array;
+                const timeFactor = elapsedTime * 0.5;
+                for (let i = 0; i < positions.length; i += 3) {
+                    const x = originalParticlePositions[i];
+                    const y = originalParticlePositions[i + 1];
+                    const z = originalParticlePositions[i + 2];
+                    const scale = 1.0 + Math.sin(timeFactor + x * 2.1) * 0.08;
+                    positions[i] = x * scale;
+                    positions[i + 1] = y * scale + Math.sin(timeFactor + i) * 0.05;
+                    positions[i + 2] = z * scale;
+                }
+                particleSystem.geometry.attributes.position.needsUpdate = true;
+                particleSystem.rotation.y = elapsedTime * 0.05;
+            }
+            controls.update();
+            renderer.render(scene, camera);
+        }
+
+        // Expose the init function to be called from the main script
+        window.init3D = init3D;
+    </script>
+
+    <!-- Main Application Logic -->
     <script>
     const pwaSetup = () => {
         const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><radialGradient id="grad" cx="50%" cy="50%" r="50%" fx="50%" fy="50%"><stop offset="0%" style="stop-color:rgb(255,255,255);stop-opacity:0.8"/><stop offset="100%" style="stop-color:rgb(150,50,255);stop-opacity:1"/></radialGradient></defs><circle cx="50" cy="50" r="45" fill="url(#grad)" stroke="white" stroke-width="2"/><text x="50" y="65" font-size="40" text-anchor="middle" fill="white">🔮</text></svg>`;
@@ -216,13 +382,17 @@
     pwaSetup();
 
     document.addEventListener('DOMContentLoaded', () => {
+        // --- Initialize the 3D Crystal Ball ---
+        if (typeof window.init3D === 'function') {
+            window.init3D();
+        }
+
         const screens = { s1: document.getElementById('screen1'), s2: document.getElementById('screen2'), };
         const buttons = { cabin: document.getElementById('cabin-button'), back: document.getElementById('back-button'), submitBirthday: document.getElementById('submit-birthday'), closeModal: document.getElementById('close-modal'), llmSend: document.getElementById('llm-send-btn'), install: document.getElementById('install-button'), };
         const inputs = { birthDate: document.getElementById('birthdate-input'), birthTime: document.getElementById('birthtime-input'), timezone: document.getElementById('timezone-input'), llmInput: document.getElementById('llm-input'), };
         const displays = { infoText: document.getElementById('info-text'), sunSign: document.getElementById('sun-sign'), sunEmoji: document.getElementById('sun-emoji'), moonSign: document.getElementById('moon-sign'), moonEmoji: document.getElementById('moon-emoji'), risingSign: document.getElementById('rising-sign'), risingEmoji: document.getElementById('rising-emoji'), todoList: document.getElementById('todo-list'), completedList: document.getElementById('completed-list'), dailyFortune: document.getElementById('daily-fortune'), luckyColor: document.getElementById('lucky-color'), luckyNumber: document.getElementById('lucky-number'), llmCounter: document.getElementById('llm-counter'), chatWindow: document.getElementById('chat-window'), };
         const overlays = { birthdayForm: document.getElementById('birthday-form'), fortuneModal: document.getElementById('fortune-modal'), };
         
-        // FIX: Re-declared the crystalBallContainer constant.
         const crystalBallContainer = document.getElementById('crystal-ball-container');
 
         let deferredPrompt;
@@ -256,7 +426,7 @@
         }
 
         function updateMainScreenInfo() {
-            if (userData.lastDivinationDate === new Date().toDateString()) { displays.infoText.textContent = '今天你已经占卜过了。'; } else { displays.infoText.textContent = '轻触水晶球，揭示你今日的命运轨迹。'; }
+            if (userData.lastDivinationDate === new Date().toDateString()) { displays.infoText.textContent = '今天你已经占卜过了。请享受旋转水晶球的乐趣吧！'; } else { displays.infoText.textContent = '轻触水晶球，揭示你今日的命运轨迹。'; }
         }
         
         function updateLLMCounter() { displays.llmCounter.textContent = `今日剩余对话次数: ${88 - userData.chatCount}`; buttons.llmSend.disabled = userData.chatCount >= 88; }
@@ -265,10 +435,26 @@
             buttons.cabin.addEventListener('click', () => { if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; } screens.s1.classList.add('hidden'); screens.s2.classList.remove('hidden'); });
             buttons.back.addEventListener('click', () => { screens.s2.classList.add('hidden'); screens.s1.classList.remove('hidden'); });
             buttons.submitBirthday.addEventListener('click', () => { if (inputs.birthDate.value && inputs.birthTime.value) { userData.birthDate = inputs.birthDate.value; userData.birthTime = inputs.birthTime.value; userData.timezone = inputs.timezone.value; overlays.birthdayForm.classList.add('hidden'); displays.infoText.textContent = '感谢你，现在可以开始占卜了。'; displayProfileData(); saveUserData(); } });
+            
+            let isDragging = false;
+            let startX, startY;
+            crystalBallContainer.addEventListener('mousedown', (e) => {
+                isDragging = false;
+                startX = e.clientX;
+                startY = e.clientY;
+            });
+            crystalBallContainer.addEventListener('mousemove', (e) => {
+                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
+                    isDragging = true;
+                }
+            });
             crystalBallContainer.addEventListener('click', () => {
+                if (isDragging) return; // If it was a drag, don't trigger the click event
+
                 if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; }
                 const today = new Date().toDateString();
                 if (userData.lastDivinationDate === today) { displays.infoText.textContent = '水晶球累了，明天再来吧！'; return; }
+                
                 userData.lastDivinationDate = today;
                 displays.dailyFortune.textContent = getRandomItem(DATA.fortunes);
                 const [colorName, colorHex] = getRandomItem(DATA.luckyColors);
@@ -277,6 +463,7 @@
                 overlays.fortuneModal.classList.remove('hidden');
                 saveUserData();
             });
+
             buttons.closeModal.addEventListener('click', () => { overlays.fortuneModal.classList.add('hidden'); updateMainScreenInfo(); });
             buttons.llmSend.addEventListener('click', handleLLMSubmit);
             inputs.llmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLLMSubmit(); });
@@ -286,17 +473,13 @@
             const { sender, text, suggestions } = messageObject;
             const messageEl = document.createElement('div');
             messageEl.classList.add('chat-message', sender);
-
             const bubble = document.createElement('div');
             bubble.classList.add('bubble');
             bubble.textContent = text;
-
             if (suggestions && suggestions.length > 0) {
                 const suggestionCard = document.createElement('div');
                 suggestionCard.className = 'suggestion-card';
-
                 suggestionCard.innerHTML = `<h4>为你推荐的路径：</h4><ul>${suggestions.map(s => `<li>✧ ${s}</li>`).join('')}</ul>`;
-                
                 const acceptBtn = document.createElement('button');
                 acceptBtn.className = 'btn-primary btn-accept';
                 acceptBtn.textContent = '接受建议';
@@ -311,7 +494,6 @@
                 suggestionCard.appendChild(acceptBtn);
                 bubble.appendChild(suggestionCard);
             }
-
             messageEl.appendChild(bubble);
             displays.chatWindow.appendChild(messageEl);
             displays.chatWindow.scrollTop = displays.chatWindow.scrollHeight;
@@ -325,40 +507,32 @@
         async function handleLLMSubmit() {
             const userInput = inputs.llmInput.value.trim();
             if (userData.chatCount >= 88 || !userInput) return;
-            
             const userMessage = { sender: 'user', text: userInput, suggestions: null };
             addMessageToChat(userMessage);
             userData.conversationHistory.push(userMessage);
             userData.chatCount++;
             saveUserData();
             updateLLMCounter();
-            
             inputs.llmInput.value = "";
             buttons.llmSend.disabled = true;
-
             try {
                 const secureBackendUrl = 'https://api.spirit-vitamin.com/api/chat'; 
                 const apiKey = 'fortunetell-a9b8c7d6e5f4';
-
                 const historyToPass = userData.conversationHistory.map(m => m.text);
-
                 const response = await fetch(secureBackendUrl, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey, 'X-User-ID': userData.userId },
                     body: JSON.stringify({ prompt: userInput, conversationHistory: historyToPass })
                 });
-
                 if (!response.ok) {
                     const errorData = await response.json();
                     throw new Error(errorData.error || `Request failed with status: ${response.status}`);
                 }
-
                 const data = await response.json();
                 const lilliaMessage = { sender: 'lillia', text: data.reply, suggestions: data.suggestions };
                 addMessageToChat(lilliaMessage);
                 userData.conversationHistory.push(lilliaMessage);
                 saveUserData();
-
             } catch (error) {
                 console.error("API Call Error:", error);
                 addMessageToChat({ sender: 'lillia', text: `连接Lillia的魔法失败了。 ${error.message}` });
@@ -411,7 +585,7 @@
         }
         
         const SIGNS = [ ["摩羯座", "♑️"], ["水瓶座", "♒️"], ["双鱼座", "♓️"], ["白羊座", "♈️"], ["金牛座", "♉️"], ["双子座", "♊️"], ["巨蟹座", "♋️"], ["狮子座", "♌️"], ["处女座", "♍️"], ["天秤座", "♎️"], ["天蝎座", "♏️"], ["射手座", "♐️"], ];
-        function getSunSign(date) { const m = date.getMonth() + 1; const d = date.getDate(); if((m==1&&d>=20)||(m==2&&d<=18)) return SIGNS[1]; if((m==2&&d>=19)||(m==3&&d<=20)) return SIGNS[2]; if((m==3&&d>=21)||(m==4&&d<=19)) return SIGNS[3]; if((m==4&&d>=20)||(m==5&&d<=20)) return SIGNS[4]; if((m==5&&d>=21)||(m==6&&d<=21)) return SIGNS[5]; if((m==6&&d>=22)||(m==7&&d<=22)) return SIGNS[6]; if((m==7&&d>=23)||(m==8&&d<=22)) return SIGNS[7]; if((m==8&&d>=23)||(m==9&&d<=22)) return SIGNS[8]; if((m==9&&d>=23)||(m==10&&d<=23)) return SIGNS[9]; if((m==10&&d>=24)||(m==11&&d<=22)) return SIGS[10]; if((m==11&&d>=23)||(m==12&&d<=21)) return SIGNS[11]; if((m==12&&d>=22)||(m==1&&d<=19)) return SIGNS[0]; }
+        function getSunSign(date) { const m = date.getMonth() + 1; const d = date.getDate(); if((m==1&&d>=20)||(m==2&&d<=18)) return SIGNS[1]; if((m==2&&d>=19)||(m==3&&d<=20)) return SIGNS[2]; if((m==3&&d>=21)||(m==4&&d<=19)) return SIGNS[3]; if((m==4&&d>=20)||(m==5&&d<=20)) return SIGNS[4]; if((m==5&&d>=21)||(m==6&&d<=21)) return SIGNS[5]; if((m==6&&d>=22)||(m==7&&d<=22)) return SIGNS[6]; if((m==7&&d>=23)||(m==8&&d<=22)) return SIGNS[7]; if((m==8&&d>=23)||(m==9&&d<=22)) return SIGNS[8]; if((m==9&&d>=23)||(m==10&&d<=23)) return SIGNS[9]; if((m==10&&d>=24)||(m==11&&d<=22)) return SIGNS[10]; if((m==11&&d>=23)||(m==12&&d<=21)) return SIGNS[11]; if((m==12&&d>=22)||(m==1&&d<=19)) return SIGNS[0]; return SIGNS[0]; /* Fallback */ }
         function getMoonSign(date) { const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000); const signIndex = Math.floor((dayOfYear / 2.5) + date.getDay()) % 12; return SIGNS[signIndex]; }
         function getRisingSign(date, timezoneOffset) { const utcHour = date.getUTCHours(); const localHour = (utcHour + timezoneOffset + 24) % 24; const signIndex = (SIGNS.findIndex(s => s[0] === "白羊座") + Math.floor(localHour / 2)) % 12; return SIGNS[signIndex]; }
 
