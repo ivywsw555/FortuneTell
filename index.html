@@ -44,7 +44,11 @@
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5);
             overflow: hidden; position: relative;
             user-select: none; 
-            -webkit-user-select: none;
+            -webkit-user-select: none; /* Safari, Chrome, Opera */
+            -moz-user-select: none;    /* Firefox */
+            -ms-user-select: none;     /* Internet Explorer/Edge */
+    
+            -webkit-touch-callout: none; 
         }
         #install-button {
             position: absolute;
@@ -552,55 +556,87 @@
 
         function setupEventListeners() {
             let holdTimeout;
-
-            const stopHolding = () => {
-                clearTimeout(holdTimeout);
-                if(window.shrinkParticles) window.shrinkParticles();
-            };
-
-            buttons.cabin.addEventListener('click', () => { if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; } screens.s1.classList.add('hidden'); screens.s2.classList.remove('hidden'); });
-            buttons.back.addEventListener('click', () => { screens.s2.classList.add('hidden'); screens.s1.classList.remove('hidden'); });
-            buttons.submitBirthday.addEventListener('click', () => { if (inputs.birthDate.value && inputs.birthTime.value) { userData.birthDate = inputs.birthDate.value; userData.birthTime = inputs.birthTime.value; userData.timezone = inputs.timezone.value; overlays.birthdayForm.classList.add('hidden'); displays.infoText.textContent = '感谢你，现在可以开始占卜了。'; displayProfileData(); saveUserData(); } });
-            
             let isDragging = false;
             let startX, startY;
-
-            crystalBallContainer.addEventListener('mousedown', (e) => {
+        
+            // --- Shared Functions for Mouse and Touch ---
+        
+            const startInteraction = (x, y) => {
                 isDragging = false;
-                startX = e.clientX;
-                startY = e.clientY;
-            
+                startX = x;
+                startY = y;
+                
+                clearTimeout(holdTimeout); // Clear any previous timeout
                 holdTimeout = setTimeout(() => {
-
-            
-                    if (!isDragging  && window.expandParticles) {
+                    const hasFortuneHeader = Array.from(document.querySelectorAll('h3')).some(
+                        h3 => h3.textContent.includes('今日运势')
+                    );
+                    if (!isDragging && !hasFortuneHeader && window.expandParticles) {
                         window.expandParticles();
                     }
                 }, 400);
-            });
-
-            crystalBallContainer.addEventListener('mousemove', (e) => {
-                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
-                    if(!isDragging) {
+            };
+        
+            const moveInteraction = (x, y) => {
+                if (Math.abs(x - startX) > 10 || Math.abs(y - startY) > 10) {
+                    if (!isDragging) {
                         isDragging = true;
-                        stopHolding();
+                        stopInteraction(); // It's a drag, so cancel the hold/particle effect
                     }
                 }
+            };
+        
+            const stopInteraction = () => {
+                clearTimeout(holdTimeout);
+                if (window.shrinkParticles) {
+                    window.shrinkParticles();
+                }
+            };
+            
+            // --- Mouse Event Listeners (For Desktop) ---
+            crystalBallContainer.addEventListener('mousedown', (e) => {
+                startInteraction(e.clientX, e.clientY);
+            });
+        
+            crystalBallContainer.addEventListener('mousemove', (e) => {
+                moveInteraction(e.clientX, e.clientY);
             });
             
-            crystalBallContainer.addEventListener('mouseup', stopHolding);
-            crystalBallContainer.addEventListener('mouseleave', stopHolding);
-
+            crystalBallContainer.addEventListener('mouseup', stopInteraction);
+            crystalBallContainer.addEventListener('mouseleave', stopInteraction);
+        
+            // --- NEW: Touch Event Listeners (For Mobile) ---
+            crystalBallContainer.addEventListener('touchstart', (e) => {
+                // Use the first touch point
+                const touch = e.touches[0];
+                startInteraction(touch.clientX, touch.clientY);
+            }, { passive: true }); // Use passive for better scroll performance
+        
+            crystalBallContainer.addEventListener('touchmove', (e) => {
+                // Prevent screen scrolling while interacting with the ball
+                e.preventDefault(); 
+                const touch = e.touches[0];
+                moveInteraction(touch.clientX, touch.clientY);
+            }, { passive: false }); // Needs to be non-passive to call preventDefault
+        
+            crystalBallContainer.addEventListener('touchend', stopInteraction);
+            crystalBallContainer.addEventListener('touchcancel', stopInteraction); // Handle interruptions
+        
+        
+            // --- Other Listeners (Unchanged) ---
             crystalBallContainer.addEventListener('click', () => {
-                if (isDragging) return; // If it was a drag, don't trigger the click event
+                if (isDragging) return;
+                
+                const hasFortuneHeader = Array.from(document.querySelectorAll('h3')).some(
+                    h3 => h3.textContent.includes('今日运势')
+                );
+                if (hasFortuneHeader) return;
                 
                 if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; }
                 const today = new Date().toDateString();
                 if (userData.lastDivinationDate === today) { displays.infoText.textContent = '水晶球累了，明天再来吧！'; return; }
                 
                 userData.lastDivinationDate = today;
-                
-                // START: Save fortune details to userData
                 const fortuneText = getRandomItem(DATA.fortunes);
                 const [colorName, colorHex] = getRandomItem(DATA.luckyColors);
                 const luckyNumber = getRandomItem(DATA.luckyNumbers);
@@ -609,23 +645,21 @@
                 userData.todayLuckyColorName = colorName;
                 userData.todayLuckyColorHex = colorHex;
                 userData.todayLuckyNumber = luckyNumber;
-                // END: Save fortune details
-
+        
                 displays.dailyFortune.textContent = fortuneText;
                 displays.luckyColor.innerHTML = `幸运色: ${colorName} <span class="color-swatch" style="background-color: ${colorHex};"></span>`;
                 displays.luckyNumber.textContent = `幸运数字: ${luckyNumber}`;
                 overlays.fortuneModal.classList.remove('hidden');
                 saveUserData();
             });
-
-            buttons.closeModal.addEventListener('click', () => { 
-                overlays.fortuneModal.classList.add('hidden'); 
-                displayTodayCard(); 
-            });
+        
+            buttons.cabin.addEventListener('click', () => { if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; } screens.s1.classList.add('hidden'); screens.s2.classList.remove('hidden'); });
+            buttons.back.addEventListener('click', () => { screens.s2.classList.add('hidden'); screens.s1.classList.remove('hidden'); });
+            buttons.submitBirthday.addEventListener('click', () => { if (inputs.birthDate.value && inputs.birthTime.value) { userData.birthDate = inputs.birthDate.value; userData.birthTime = inputs.birthTime.value; userData.timezone = inputs.timezone.value; overlays.birthdayForm.classList.add('hidden'); displays.infoText.textContent = '感谢你，现在可以开始占卜了。'; displayProfileData(); saveUserData(); } });
+            buttons.closeModal.addEventListener('click', () => { overlays.fortuneModal.classList.add('hidden'); displayTodayCard(); });
             buttons.llmSend.addEventListener('click', handleLLMSubmit);
             inputs.llmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLLMSubmit(); });
         }
-
         function addMessageToChat(messageObject) {
             const { sender, text, suggestions } = messageObject;
             const messageEl = document.createElement('div');
