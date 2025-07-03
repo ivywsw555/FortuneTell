@@ -38,17 +38,17 @@
         }
         .app-container {
             width: 100%; height: 100%;
-            max-width: 450px; max-height: 800px;
+            max-width: 900px; max-height: 1700px;
             background: #3a2a2a;
             border-radius: 20px;
             box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5);
             overflow: hidden; position: relative;
             user-select: none; 
-            -webkit-user-select: none; /* Safari, Chrome, Opera */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* Internet Explorer/Edge */
-        
-            /* Specifically for iOS Safari to prevent the menu on long press */
+            -webkit-user-select: none; 
+            -moz-user-select: none;   
+            -ms-user-select: none;   
+            -webkit-tap-highlight-color: transparent;
+
             -webkit-touch-callout: none; 
         }
         #install-button {
@@ -70,7 +70,7 @@
         #screen1 {
             background: 
                 radial-gradient(circle at 50% 65%, rgba(224, 206, 172, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at center, #4c3553, var(--bg-color) 70%);
+                radial-gradient(circle at center, #5d3869, var(--bg-color) 70%);
         }
         .cabin-button {
             position: absolute; top: 20px; right: 20px;
@@ -105,7 +105,7 @@
         .ball-stand {
             width: 120px; height: 40px; background: #251a1a;
             border-radius: 10px 10px 50% 50% / 10px 10px 20px 20px;
-            bottom: 15rem;
+            bottom: 17rem;
             box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
             position: absolute; 
             z-index: -1;
@@ -313,15 +313,29 @@
 
         // --- Object Creation Functions ---
         function createCrystalBall() {
-            const geometry = new THREE.SphereGeometry(1.5, 128, 128); 
+            const geometry = new THREE.SphereGeometry(1.5, 128, 128);
             const material = new THREE.MeshPhysicalMaterial({
                 roughness: 0,
                 metalness: 0,
-                transmission: 1.0, 
-                ior: 2.30, 
-                thickness: 15.0,
-                specularIntensity: 5,
-                envMapIntensity: 5.5
+                transmission: 1.0,
+                ior: 2.0,
+        
+                // --- Key Changes to Fix Faded Look ---
+        
+                // 1. Introduce a subtle color for the light to absorb.
+                //    A slight off-white or a very light color works best.
+                attenuationColor: 0xeeeeff, // A very light blue/purple tint
+        
+                // 2. Define how far light travels before being fully absorbed by the color.
+                //    A smaller number means the color is more pronounced.
+                attenuationDistance: 0.8,
+        
+                // This property now has a more significant visual effect
+                thickness: 4.0,
+        
+                specularIntensity: 4.0,
+                envMapIntensity: 2.0,
+                color: 0xffffff
             });
             crystalBall = new THREE.Mesh(geometry, material);
             scene.add(crystalBall);
@@ -357,7 +371,7 @@
             geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
 
             const material = new THREE.PointsMaterial({
-                size: 0.06,
+                size: 0.05,
                 vertexColors: true,
                 blending: THREE.AdditiveBlending,
                 transparent: true,
@@ -402,7 +416,7 @@
         };
 
         window.shrinkParticles = () => {
-            targetParticleRadiusMultiplier = 1.2; // Return to normal size
+            targetParticleRadiusMultiplier = 1.0; // Return to normal size
         };
 
         function animate3D() {
@@ -410,18 +424,15 @@
             const elapsedTime = clock.getElapsedTime();
 
             // Smoothly animate the radius multiplier
-            const startRadius = (targetParticleRadiusMultiplier > 1.0) ? 1.0 : 2.5; // If target > 1, we start from 1
+            const startRadius = (targetParticleRadiusMultiplier > 1.0) ? 1.0 : 2.5; 
             const endRadius = targetParticleRadiusMultiplier;
 
             // Check if we are animating to avoid division by zero
             if (startRadius !== endRadius) {
-                // Calculate current progress (a value from 0 to 1)
                 const totalDistance = endRadius - startRadius;
                 const currentDistance = particleRadiusMultiplier - startRadius;
                 const progress = Math.max(0, Math.min(1, currentDistance / totalDistance));
-
                 const easedFactor = 0.01 + Math.sin(progress * Math.PI) * 0.05;
-                // Apply the newly calculated factor to the lerp function
                 particleRadiusMultiplier = THREE.MathUtils.lerp(particleRadiusMultiplier, targetParticleRadiusMultiplier, easedFactor);
             }
             if (particleSystem) {
@@ -487,6 +498,60 @@
 
         let userData = {};
         
+        // --- START: UNIFIED EVENT HANDLING LOGIC ---
+        // State variables for tracking touch/mouse interaction
+        let holdTimeout;
+        let isDragging = false;
+        let startX, startY;
+
+        // Function to call when the user starts pressing/touching
+        const handleStart = (e) => {
+            isDragging = false;
+            // Get coordinates for both touch and mouse events
+            const touch = e.touches ? e.touches[0] : null;
+            startX = touch ? touch.clientX : e.clientX;
+            startY = touch ? touch.clientY : e.clientY;
+        
+            // Set a timer to expand particles if the user holds
+            holdTimeout = setTimeout(() => {
+                if (!isDragging && window.expandParticles) {
+                    window.expandParticles();
+                }
+            }, 400); // 400ms hold duration
+        };
+        
+        // Function to call when the user moves their finger/mouse
+        const handleMove = (e) => {
+            if (e.touches && e.touches.length > 1) return; // Ignore multi-touch
+        
+            const touch = e.touches ? e.touches[0] : null;
+            const currentX = touch ? touch.clientX : e.clientX;
+            const currentY = touch ? touch.clientY : e.clientY;
+        
+            // If moved more than a few pixels, consider it a drag
+            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
+                if (!isDragging) {
+                    isDragging = true;
+                    // If it's a drag, cancel the hold effect and shrink particles
+                    stopHolding();
+                }
+            }
+        };
+        
+        // Function to call when the user releases touch/mouse
+        const handleEnd = () => {
+            stopHolding();
+        };
+
+        // This function clears the timer and shrinks the particles.
+        // It's now in a scope accessible by all handlers.
+        const stopHolding = () => {
+            clearTimeout(holdTimeout);
+            if(window.shrinkParticles) window.shrinkParticles();
+        };
+        // --- END: UNIFIED EVENT HANDLING LOGIC ---
+
+
         function loadUserData() {
             // START: Modified default data
             const defaultData = { userId: null, birthDate: null, birthTime: null, timezone: null, lastDivinationDate: null, todayFortune: null, todayLuckyColorName: null, todayLuckyColorHex: null, todayLuckyNumber: null, lastTodoListUpdate: null, weeklyTodos: [], lastChatDate: null, chatCount: 0, conversationHistory: [] };
@@ -560,82 +625,28 @@
         // END: New function
 
         function updateLLMCounter() { displays.llmCounter.textContent = `今日剩余对话次数: ${88 - userData.chatCount}`; buttons.llmSend.disabled = userData.chatCount >= 88; }
-        const handleStart = (e) => {
-            isDragging = false;
-            // For touch events, we need to look at the 'touches' array
-            const touch = e.touches ? e.touches[0] : null;
-            startX = touch ? touch.clientX : e.clientX;
-            startY = touch ? touch.clientY : e.clientY;
-        
-            holdTimeout = setTimeout(() => {
-                if (!isDragging && window.expandParticles) {
-                    window.expandParticles();
-                }
-            }, 400);
-        };
-        
-        const handleMove = (e) => {
-            if (e.touches && e.touches.length > 1) return; // Ignore multi-touch gestures
-        
-            const touch = e.touches ? e.touches[0] : null;
-            const currentX = touch ? touch.clientX : e.clientX;
-            const currentY = touch ? touch.clientY : e.clientY;
-        
-            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
-                if (!isDragging) {
-                    isDragging = true;
-                    stopHolding();
-                }
-            }
-        };
-        
-        const handleEnd = () => {
-            stopHolding();
-        };
         
         function setupEventListeners() {
-            let holdTimeout;
-
-            const stopHolding = () => {
-                clearTimeout(holdTimeout);
-                if(window.shrinkParticles) window.shrinkParticles();
-            };
-
             buttons.cabin.addEventListener('click', () => { if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; } screens.s1.classList.add('hidden'); screens.s2.classList.remove('hidden'); });
             buttons.back.addEventListener('click', () => { screens.s2.classList.add('hidden'); screens.s1.classList.remove('hidden'); });
             buttons.submitBirthday.addEventListener('click', () => { if (inputs.birthDate.value && inputs.birthTime.value) { userData.birthDate = inputs.birthDate.value; userData.birthTime = inputs.birthTime.value; userData.timezone = inputs.timezone.value; overlays.birthdayForm.classList.add('hidden'); displays.infoText.textContent = '感谢你，现在可以开始占卜了。'; displayProfileData(); saveUserData(); } });
             
-            let isDragging = false;
-            let startX, startY;
+            // --- REFACTORED AND UNIFIED EVENT LISTENERS ---
+            // Mouse Events
+            crystalBallContainer.addEventListener('mousedown', handleStart);
+            crystalBallContainer.addEventListener('mousemove', handleMove);
+            crystalBallContainer.addEventListener('mouseup', handleEnd);
+            crystalBallContainer.addEventListener('mouseleave', handleEnd);
 
-            crystalBallContainer.addEventListener('mousedown', (e) => {
-                isDragging = false;
-                startX = e.clientX;
-                startY = e.clientY;
-            
-                holdTimeout = setTimeout(() => {
+            // Touch Events
+            crystalBallContainer.addEventListener('touchstart', handleStart);
+            crystalBallContainer.addEventListener('touchmove', handleMove);
+            crystalBallContainer.addEventListener('touchend', handleEnd);
+            crystalBallContainer.addEventListener('touchcancel', handleEnd);
 
-            
-                    if (!isDragging  && window.expandParticles) {
-                        window.expandParticles();
-                    }
-                }, 400);
-            });
-
-            crystalBallContainer.addEventListener('mousemove', (e) => {
-                if (Math.abs(e.clientX - startX) > 5 || Math.abs(e.clientY - startY) > 5) {
-                    if(!isDragging) {
-                        isDragging = true;
-                        stopHolding();
-                    }
-                }
-            });
-            
-            crystalBallContainer.addEventListener('mouseup', stopHolding);
-            crystalBallContainer.addEventListener('mouseleave', stopHolding);
-
+            // Click event for the divination
             crystalBallContainer.addEventListener('click', () => {
-                if (isDragging) return; // If it was a drag, don't trigger the click event
+                if (isDragging) return; // Don't trigger a click if the user was dragging
                 
                 if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; }
                 const today = new Date().toDateString();
@@ -643,7 +654,6 @@
                 
                 userData.lastDivinationDate = today;
                 
-                // START: Save fortune details to userData
                 const fortuneText = getRandomItem(DATA.fortunes);
                 const [colorName, colorHex] = getRandomItem(DATA.luckyColors);
                 const luckyNumber = getRandomItem(DATA.luckyNumbers);
@@ -652,7 +662,6 @@
                 userData.todayLuckyColorName = colorName;
                 userData.todayLuckyColorHex = colorHex;
                 userData.todayLuckyNumber = luckyNumber;
-                // END: Save fortune details
 
                 displays.dailyFortune.textContent = fortuneText;
                 displays.luckyColor.innerHTML = `幸运色: ${colorName} <span class="color-swatch" style="background-color: ${colorHex};"></span>`;
@@ -660,11 +669,7 @@
                 overlays.fortuneModal.classList.remove('hidden');
                 saveUserData();
             });
-            crystalBallContainer.addEventListener('touchstart', handleStart);
-            crystalBallContainer.addEventListener('touchmove', handleMove);
-            crystalBallContainer.addEventListener('touchend', handleEnd);
-            crystalBallContainer.addEventListener('touchcancel', handleEnd);
-            
+
             buttons.closeModal.addEventListener('click', () => { 
                 overlays.fortuneModal.classList.add('hidden'); 
                 displayTodayCard(); 
