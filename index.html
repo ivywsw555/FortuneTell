@@ -45,8 +45,8 @@
             overflow: hidden; position: relative;
             user-select: none; 
             -webkit-user-select: none; 
-            -moz-user-select: none;   
-            -ms-user-select: none;   
+            -moz-user-select: none;  
+            -ms-user-select: none;  
             -webkit-tap-highlight-color: transparent;
 
             -webkit-touch-callout: none; 
@@ -63,14 +63,14 @@
             position: absolute; width: 100%; height: 100%;
             display: flex; flex-direction: column;
             justify-content: center; align-items: center;
-            padding: 30px; text-align: center;
+            padding: 0px; text-align: center;
             transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
         }
         .screen.hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
         #screen1 {
             background: 
                 radial-gradient(circle at 50% 65%, rgba(224, 206, 172, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at center, #5d3869, var(--bg-color) 70%);
+                radial-gradient(circle at center, #501855, var(--bg-color) 70%);
         }
         .cabin-button {
             position: absolute; top: 20px; right: 20px;
@@ -78,6 +78,33 @@
         }
         .cabin-button svg { width: 32px; height: 32px; fill: var(--text-color); transition: transform 0.3s; }
         .cabin-button:hover svg { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--accent-color)); }
+        
+        /* START: Styles for Language Switcher */
+        #language-selector {
+            position: absolute;
+            top: 25px;
+            left: 20px;
+            z-index: 11; /* Above cabin button */
+            background: rgba(0,0,0,0.2);
+            padding: 5px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        #language-selector .lang-option {
+            color: #aaa;
+            text-decoration: none;
+            padding: 5px 8px;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s ease;
+        }
+        #language-selector .lang-option.active {
+            color: var(--accent-color);
+            text-shadow: 0 0 5px var(--accent-color);
+        }
+        /* END: Styles for Language Switcher */
+
         .title { font-size: 2rem; font-weight: 700; margin-bottom: 20px; text-shadow: 0 0 10px var(--accent-color);  top: 10rem;
             position: absolute; }
         
@@ -103,11 +130,11 @@
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-15px); } 100% { transform: translateY(0px); } }
         
         .ball-stand {
-            width: 120px; height: 40px; background: #251a1a;
+            width: 120px; height: 40px; background: #3d2020;
             border-radius: 10px 10px 50% 50% / 10px 10px 20px 20px;
-            bottom: 17rem;
-            box-shadow: inset 0 5px 10px rgba(0,0,0,0.5);
-            position: absolute; 
+            bottom: 21rem;
+            box-shadow: inset 0 5px 10px rgba(143, 67, 67, 0.5);
+            position: relative; 
             z-index: -1;
             left: 50%;
             transform: translateX(-50%);
@@ -138,7 +165,7 @@
         .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--accent-color); }
         #screen2 { background: linear-gradient(180deg, #3a2a2a, #201515); justify-content: flex-start; padding-top: 70px; overflow-y: auto; }
         .back-button { position: absolute; top: 20px; left: 20px; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: pointer; z-index: 10; }
-        .results-content { display: flex; flex-direction: column; gap: 20px; width: 100%; padding-bottom: 30px; }
+        .results-content { padding:30px;display: flex; flex-direction: column; gap: 20px; width: 100%; padding-bottom: 30px; }
         .result-card { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; border-left: 5px solid var(--accent-color); text-align: left; }
         .result-card h3 { margin-bottom: 10px; color: var(--accent-color); font-size: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
         .result-card h3 .explanation { font-size: 0.8rem; color: #ccc; font-weight: 400; }
@@ -212,26 +239,30 @@
 <body>
     <div class="app-container" id="app-container">
         <div class="screen" id="screen1">
-            <button class="cabin-button" id="cabin-button" title="进入小屋"><svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg></button>
-            <h1 class="title">每日占卜</h1>
+            <div id="language-selector">
+                <a class="lang-option" data-lang="zh-CN">中文</a>
+                <a class="lang-option" data-lang="en">EN</a>
+            </div>
+            <button class="cabin-button" id="cabin-button" data-translate-key="cabin-button-title" data-translate-prop="title" title="进入小屋"><svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg></button>
+            <h1 class="title" data-translate-key="title">每日占卜</h1>
             <div class="crystal-ball-container" id="crystal-ball-container">
                 <div id="three-canvas-container"></div>
                 <div class="ball-stand"></div>
             </div>
-            <p class="info-text" id="info-text">轻触水晶球，揭示你今日的命运轨迹。</p>
+            <p class="info-text" id="info-text" data-translate-key="info-text-initial">轻触水晶球，揭示你今日的命运轨迹。</p>
             
             <div id="today-card" class="result-card hidden">
             
             </div>
         </div>
         
-        <div class="screen hidden" id="screen2"><button class="back-button" id="back-button" title="返回">«</button><div class="results-content"><div class="result-card"><h3>你的星辰图谱</h3><div class="signs-display"><div class="sign"><span class="emoji" id="sun-emoji">☀️</span><strong>太阳星座</strong> <span class="explanation">核心自我</span><p id="sun-sign"></p></div><div class="sign"><span class="emoji" id="moon-emoji">🌙</span><strong>月亮星座</strong> <span class="explanation">内在情绪</span><p id="moon-sign"></p></div><div class="sign"><span class="emoji" id="rising-emoji">🌅</span><strong>上升星座</strong> <span class="explanation">社交面具</span><p id="rising-sign"></p></div></div></div><div class="result-card"><h3>通往理想自我的路径</h3><div class="todo-section"><h4>本周指引</h4><ul id="todo-list" class="todo-list"></ul></div><div class="todo-section"><h4>已完成</h4><ul id="completed-list" class="todo-list"></ul></div></div>
+        <div class="screen hidden" id="screen2"><button class="back-button" id="back-button" title="返回">«</button><div class="results-content"><div class="result-card"><h3 data-translate-key="s2-card1-title">你的星辰图谱</h3><div class="signs-display"><div class="sign"><span class="emoji" id="sun-emoji">☀️</span><strong data-translate-key="sun-sign-label">太阳星座</strong> <span class="explanation" data-translate-key="sun-sign-desc">核心自我</span><p id="sun-sign"></p></div><div class="sign"><span class="emoji" id="moon-emoji">🌙</span><strong data-translate-key="moon-sign-label">月亮星座</strong> <span class="explanation" data-translate-key="moon-sign-desc">内在情绪</span><p id="moon-sign"></p></div><div class="sign"><span class="emoji" id="rising-emoji">🌅</span><strong data-translate-key="rising-sign-label">上升星座</strong> <span class="explanation" data-translate-key="rising-sign-desc">社交面具</span><p id="rising-sign"></p></div></div></div><div class="result-card"><h3>通往理想自我的路径</h3><div class="todo-section"><h4>本周指引</h4><ul id="todo-list" class="todo-list"></ul></div><div class="todo-section"><h4>已完成</h4><ul id="completed-list" class="todo-list"></ul></div></div>
         <div class="result-card"><h3>与莉莉安(Lillia)对话</h3><div class="chat-container"><div id="chat-window"></div><div id="chat-input-area"><input type="text" id="llm-input" placeholder="告诉Lillia你的想法..."><button id="llm-send-btn">➤</button></div></div><p id="llm-counter"></p></div>
-        <div class="ad-space">广告位 (320x50)</div></div></div>
+        <!-- <div class="ad-space">广告位 (320x50)</div></div></div> -->
         
-        <div id="birthday-form" class="overlay hidden"><div class="form-content"><h2>魔法需要你的诞生时刻</h2><div class="input-group"><input type="date" id="birthdate-input" required><input type="time" id="birthtime-input" required></div><select id="timezone-input"></select><button id="submit-birthday" class="btn-primary">确认时刻</button></div></div>
-        <div id="fortune-modal" class="overlay hidden"><div class="modal-content"><h3>今日运势</h3><p id="daily-fortune"></p><div class="lucky-elements"><div id="lucky-color"></div><div id="lucky-number"></div></div><button id="close-modal" class="btn-primary">我明白了</button></div></div>
-        <button id="install-button" class="btn-primary">安装应用</button>
+        <div id="birthday-form" class="overlay hidden"><div class="form-content"><h2 data-translate-key="birthday-form-title">魔法需要你的诞生时刻</h2><div class="input-group"><input type="date" id="birthdate-input" required><input type="time" id="birthtime-input" required></div><select id="timezone-input"></select><button id="submit-birthday" class="btn-primary" data-translate-key="submit-birthday-btn">确认时刻</button></div></div>
+        <div id="fortune-modal" class="overlay hidden"><div class="modal-content"><h3 data-translate-key="fortune-modal-title">今日运势</h3><p id="daily-fortune"></p><div class="lucky-elements"><div id="lucky-color"></div><div id="lucky-number"></div></div><button id="close-modal" class="btn-primary" data-translate-key="close-modal-btn">我明白了</button></div></div>
+        <button id="install-button" class="btn-primary" data-translate-key="install-button">安装应用</button>
     </div>
 
     <script type="module">
@@ -270,7 +301,7 @@
             renderer.setPixelRatio(window.devicePixelRatio);
             renderer.setClearColor(0x000000, 0); // Transparent background
             renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 1.0;
+            renderer.toneMappingExposure = 0.8;
             container.appendChild(renderer.domElement);
             
             // Add an HDR environment map for realistic reflections and refractions
@@ -320,18 +351,14 @@
                 transmission: 1.0,
                 ior: 2.0,
         
-                // --- Key Changes to Fix Faded Look ---
-        
-                // 1. Introduce a subtle color for the light to absorb.
-                //    A slight off-white or a very light color works best.
-                attenuationColor: 0xeeeeff, // A very light blue/purple tint
+                attenuationColor: 0xf0a6f5, // A very light blue/purple tint
         
                 // 2. Define how far light travels before being fully absorbed by the color.
                 //    A smaller number means the color is more pronounced.
-                attenuationDistance: 0.8,
+                attenuationDistance: 3.8,
         
                 // This property now has a more significant visual effect
-                thickness: 4.0,
+                thickness: 3.5,
         
                 specularIntensity: 4.0,
                 envMapIntensity: 2.0,
@@ -382,7 +409,43 @@
             particleSystem = new THREE.Points(geometry, material);
             scene.add(particleSystem);
         }
+        function createClouds() {
+            cloudGroup = new THREE.Group();
+            const textureLoader = new THREE.TextureLoader();
+            
+            const textureUrl = 'https://raw.githubusercontent.com/S-U-B-H-A-D-E-E-P/particle-system-babylonjs/master/assets/smoke.png';
 
+            textureLoader.load(textureUrl, function (texture) {
+                const cloudGeometry = new THREE.PlaneGeometry(2.5, 2.5);
+                const cloudMaterial = new THREE.MeshBasicMaterial({
+                    map: texture,
+                    blending: THREE.NormalBlending,
+                    transparent: true,
+                    opacity: 0.2, 
+                    depthWrite: false,
+                });
+
+                const numClouds = 20;
+                for (let i = 0; i < numClouds; i++) {
+                    const cloud = new THREE.Mesh(cloudGeometry, cloudMaterial);
+
+                    const randomPoint = new THREE.Vector3(
+                        Math.random() * 2 - 1,
+                        Math.random() * 2 - 1,
+                        Math.random() * 2 - 1
+                    ).normalize().multiplyScalar(Math.random() * 1.4);
+                    
+                    cloud.position.copy(randomPoint);
+                    cloud.rotation.z = Math.random() * Math.PI * 2;
+                    
+                    cloud.userData.rotationSpeed = (Math.random() - 0.5) * 0.001;
+
+                    cloudGroup.add(cloud);
+                }
+            });
+            
+            scene.add(cloudGroup);
+        }
         function createLights() {
             const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
             hemiLight.position.set(0, 20, 0);
@@ -552,6 +615,88 @@
         // --- END: UNIFIED EVENT HANDLING LOGIC ---
 
 
+        // =======================================================
+        // START: MULTI-LANGUAGE IMPLEMENTATION
+        // =======================================================
+        const translations = {
+            'en': {
+                'title': 'Daily Divination',
+                'cabin-button-title': 'Enter Cabin',
+                'info-text-initial': 'Touch the crystal ball to reveal your trajectory today.',
+                'info-text-done': 'You have already divined today. This is your card.',
+                'info-text-tired': 'The crystal ball is tired, come back tomorrow!',
+                'info-text-thanks': 'Thank you. You can now begin your divination.',
+                'today-card-title': "Today's Fortune",
+                'lucky-color-label': "Lucky Color",
+                'lucky-number-label': "Lucky Number",
+                'birthday-form-title': 'Magic Needs Your Moment of Birth',
+                'submit-birthday-btn': 'Confirm Time',
+                'fortune-modal-title': "Today's Fortune",
+                'close-modal-btn': 'I Understand',
+                'install-button': 'Install App',
+                's2-card1-title': 'Your Star Chart',
+                'sun-sign-label': 'Sun Sign',
+                'sun-sign-desc': 'Core Self',
+                'moon-sign-label': 'Moon Sign',
+                'moon-sign-desc': 'Inner Emotions',
+                'rising-sign-label': 'Rising Sign',
+                'rising-sign-desc': 'Social Persona',
+            },
+            'zh-CN': {
+                'title': '每日占卜',
+                'cabin-button-title': '进入小屋',
+                'info-text-initial': '轻触水晶球，揭示你今日的命运轨迹。',
+                'info-text-done': '今天你已经占卜过了，这是你的今日卡片。',
+                'info-text-tired': '水晶球累了，明天再来吧！',
+                'info-text-thanks': '感谢你，现在可以开始占卜了。',
+                'today-card-title': '今日运势',
+                'lucky-color-label': '幸运色',
+                'lucky-number-label': '幸运数字',
+                'birthday-form-title': '魔法需要你的诞生时刻',
+                'submit-birthday-btn': '确认时刻',
+                'fortune-modal-title': '今日运势',
+                'close-modal-btn': '我明白了',
+                'install-button': '安装应用',
+                's2-card1-title': '你的星辰图谱',
+                'sun-sign-label': '太阳星座',
+                'sun-sign-desc': '核心自我',
+                'moon-sign-label': '月亮星座',
+                'moon-sign-desc': '内在情绪',
+                'rising-sign-label': '上升星座',
+                'rising-sign-desc': '社交面具',
+            }
+        };
+
+        function setLanguage(lang) {
+            if (!translations[lang]) return;
+
+            localStorage.setItem('divinationAppLang', lang);
+
+            document.querySelectorAll('[data-translate-key]').forEach(el => {
+                const key = el.getAttribute('data-translate-key');
+                const prop = el.getAttribute('data-translate-prop') || 'textContent';
+                if (translations[lang][key]) {
+                    el[prop] = translations[lang][key];
+                }
+            });
+
+            document.querySelectorAll('#language-selector .lang-option').forEach(opt => {
+                opt.classList.toggle('active', opt.getAttribute('data-lang') === lang);
+            });
+            
+            // Special case for dynamic info text
+            displayTodayCard(); 
+        }
+
+        function getCurrentLang() {
+            return localStorage.getItem('divinationAppLang') || 'zh-CN';
+        }
+
+        // =======================================================
+        // END: MULTI-LANGUAGE IMPLEMENTATION
+        // =======================================================
+
+
         function loadUserData() {
             // START: Modified default data
             const defaultData = { userId: null, birthDate: null, birthTime: null, timezone: null, lastDivinationDate: null, todayFortune: null, todayLuckyColorName: null, todayLuckyColorHex: null, todayLuckyNumber: null, lastTodoListUpdate: null, weeklyTodos: [], lastChatDate: null, chatCount: 0, conversationHistory: [] };
@@ -562,7 +707,16 @@
         }
 
         function saveUserData() { localStorage.setItem('divinationAppUser', JSON.stringify(userData)); }
-        function initialize() { loadUserData(); populateTimezoneSelect(); checkInitialState(); setupEventListeners();renderChatHistory(); }
+        
+        function initialize() { 
+           loadUserData();
+            populateTimezoneSelect();
+            setupEventListeners();
+            const savedLang = getCurrentLang();
+            setLanguage(savedLang);
+            checkInitialState();
+            renderChatHistory();
+        }
 
         function populateTimezoneSelect() {
             const timezones = { "UTC-12":-12, "UTC-11":-11, "UTC-10 (夏威夷)":-10, "UTC-9":-9, "UTC-8 (太平洋时间)":-8, "UTC-7 (山区时间)":-7, "UTC-6 (中部时间)":-6, "UTC-5 (东部时间)":-5, "UTC-4":-4, "UTC-3":-3, "UTC-2":-2, "UTC-1":-1, "UTC+0 (格林威治)":0, "UTC+1 (中欧)":1, "UTC+2":2, "UTC+3":3, "UTC+4":4, "UTC+5":5, "UTC+6":6, "UTC+7":7, "UTC+8 (北京/香港)":8, "UTC+9 (东京)":9, "UTC+10":10, "UTC+11":11, "UTC+12":12 };
@@ -602,24 +756,27 @@
         // START: New function to display today's card
         function displayTodayCard() {
             const today = new Date().toDateString();
-            console.log("userData",userData);
+            const lang = getCurrentLang();
+            
             if (userData.lastDivinationDate === today && userData.todayFortune) {
-                // A fortune has been drawn today, so show the card.
+                const luckyColorLabel = translations[lang]['lucky-color-label'] || 'Lucky Color';
+                const luckyNumberLabel = translations[lang]['lucky-number-label'] || 'Lucky Number';
+                const cardTitle = translations[lang]['today-card-title'] || "Today's Fortune";
+
                 displays.todayCard.innerHTML = `
-                    <h3>今日运势</h3>
+                    <h3 data-translate-key="today-card-title">${cardTitle}</h3>
                     <p>${userData.todayFortune}</p>
                     <div class="lucky-elements">
-                        <div>幸运色: ${userData.todayLuckyColorName} <span class="color-swatch" style="background-color: ${userData.todayLuckyColorHex};"></span></div>
-                        <div>幸运数字: ${userData.todayLuckyNumber}</div>
+                        <div>${luckyColorLabel}: ${userData.todayLuckyColorName} <span class="color-swatch" style="background-color: ${userData.todayLuckyColorHex};"></span></div>
+                        <div>${luckyNumberLabel}: ${userData.todayLuckyNumber}</div>
                     </div>
                 `;
                 
                 displays.todayCard.classList.remove('hidden');
-                displays.infoText.textContent = '今天你已经占卜过了，这是你的今日卡片。';
+                displays.infoText.textContent = translations[lang]['info-text-done'];
             } else {
-                // No fortune drawn today.
                 displays.todayCard.classList.add('hidden');
-                displays.infoText.textContent = '轻触水晶球，揭示你今日的命运轨迹。';
+                displays.infoText.textContent = translations[lang]['info-text-initial'];
             }
         }
         // END: New function
@@ -627,9 +784,29 @@
         function updateLLMCounter() { displays.llmCounter.textContent = `今日剩余对话次数: ${88 - userData.chatCount}`; buttons.llmSend.disabled = userData.chatCount >= 88; }
         
         function setupEventListeners() {
+            // Language switcher
+            document.getElementById('language-selector').addEventListener('click', (e) => {
+                e.preventDefault();
+                const target = e.target.closest('.lang-option');
+                if (target) {
+                    const lang = target.getAttribute('data-lang');
+                    setLanguage(lang);
+                }
+            });
+
             buttons.cabin.addEventListener('click', () => { if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; } screens.s1.classList.add('hidden'); screens.s2.classList.remove('hidden'); });
             buttons.back.addEventListener('click', () => { screens.s2.classList.add('hidden'); screens.s1.classList.remove('hidden'); });
-            buttons.submitBirthday.addEventListener('click', () => { if (inputs.birthDate.value && inputs.birthTime.value) { userData.birthDate = inputs.birthDate.value; userData.birthTime = inputs.birthTime.value; userData.timezone = inputs.timezone.value; overlays.birthdayForm.classList.add('hidden'); displays.infoText.textContent = '感谢你，现在可以开始占卜了。'; displayProfileData(); saveUserData(); } });
+            buttons.submitBirthday.addEventListener('click', () => { 
+                if (inputs.birthDate.value && inputs.birthTime.value) { 
+                    userData.birthDate = inputs.birthDate.value; 
+                    userData.birthTime = inputs.birthTime.value; 
+                    userData.timezone = inputs.timezone.value; 
+                    overlays.birthdayForm.classList.add('hidden'); 
+                    displays.infoText.textContent = translations[getCurrentLang()]['info-text-thanks']; 
+                    displayProfileData(); 
+                    saveUserData(); 
+                } 
+            });
             
             // --- REFACTORED AND UNIFIED EVENT LISTENERS ---
             // Mouse Events
@@ -645,29 +822,57 @@
             crystalBallContainer.addEventListener('touchcancel', handleEnd);
 
             // Click event for the divination
-            crystalBallContainer.addEventListener('click', () => {
-                if (isDragging) return; // Don't trigger a click if the user was dragging
-                
-                if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; }
-                const today = new Date().toDateString();
-                if (userData.lastDivinationDate === today) { displays.infoText.textContent = '水晶球累了，明天再来吧！'; return; }
-                
-                userData.lastDivinationDate = today;
-                
-                const fortuneText = getRandomItem(DATA.fortunes);
-                const [colorName, colorHex] = getRandomItem(DATA.luckyColors);
-                const luckyNumber = getRandomItem(DATA.luckyNumbers);
-                
-                userData.todayFortune = fortuneText;
-                userData.todayLuckyColorName = colorName;
-                userData.todayLuckyColorHex = colorHex;
-                userData.todayLuckyNumber = luckyNumber;
+            crystalBallContainer.addEventListener('click', async () => {
+                if (isDragging) return;
+                if (!userData.birthDate) {
+                    overlays.birthdayForm.classList.remove('hidden');
+                    return;
+                }
 
-                displays.dailyFortune.textContent = fortuneText;
-                displays.luckyColor.innerHTML = `幸运色: ${colorName} <span class="color-swatch" style="background-color: ${colorHex};"></span>`;
-                displays.luckyNumber.textContent = `幸运数字: ${luckyNumber}`;
-                overlays.fortuneModal.classList.remove('hidden');
-                saveUserData();
+                // Show a temporary loading message
+                displays.infoText.textContent = "Gazing into the future...";
+
+                try {
+                    const response = await fetch('http://YOUR_MAC_MINI_IP:3000/api/divine', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-API-Key': 'fortunetell-a9b8c7d6e5f4', // Your API key
+                            'X-User-ID': userData.userId
+                        },
+                        body: JSON.stringify({ lang: getCurrentLang() })
+                    });
+
+                    if (!response.ok) {
+                        const errData = await response.json();
+                        throw new Error(errData.error || `Server responded with ${response.status}`);
+                    }
+
+                    const result = await response.json(); // This is today's specific fortune
+
+                    // Save the result to local storage for display
+                    const today = new Date().toDateString();
+                    userData.lastDivinationDate = today;
+                    userData.todayFortune = result.fortune;
+                    userData.todayLuckyColorName = result.luckyColorName;
+                    userData.todayLuckyColorHex = result.luckyColorHex;
+                    userData.todayLuckyNumber = result.luckyNumber;
+                    saveUserData();
+                    
+                    // Populate the modal with the received data
+                    displays.dailyFortune.textContent = result.fortune;
+                    const lang = getCurrentLang();
+                    const luckyColorLabel = translations[lang]['lucky-color-label'] || 'Lucky Color';
+                    const luckyNumberLabel = translations[lang]['lucky-number-label'] || 'Lucky Number';
+                    displays.luckyColor.innerHTML = `${luckyColorLabel}: ${result.luckyColorName} <span class="color-swatch" style="background-color: ${result.luckyColorHex};"></span>`;
+                    displays.luckyNumber.textContent = `${luckyNumberLabel}: ${result.luckyNumber}`;
+                    
+                    overlays.fortuneModal.classList.remove('hidden');
+
+                } catch (error) {
+                    console.error("Failed to get divination:", error);
+                    displays.infoText.textContent = `The spirits are unclear... (${error.message})`;
+                }
             });
 
             buttons.closeModal.addEventListener('click', () => { 
