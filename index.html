@@ -127,7 +127,7 @@
             bottom: 33%;          /* Position it 15% from the bottom of the container */
             left: 50%;            /* Center it horizontally */
             transform: translateX(-50%); /* Fine-tune the horizontal centering */
-            z-index: -1;           /* Ensure it's behind the ball but above the background */
+            z-index: -1;          /* Ensure it's behind the ball but above the background */
         }
 
         /* The parent container still handles the floating animation */
@@ -280,15 +280,12 @@
 
         let scene, camera, renderer, controls;
         let crystalBall, particleSystem;
-        let repoSmokeParticles = []; // <-- Add this new variable
-
+        let singleSmokeWisp;
+        
         let originalParticlePositions;
         const clock = new THREE.Clock();
         let container;
 
-        let singleSmokeWisp; // <-- Add this variable
-        let noise; // The Simplex Noise instance
-        
         function init3D() {
             container = document.getElementById('three-canvas-container');
             if (!container) {
@@ -325,7 +322,7 @@
             controls.target.set(0, 0, 0);
 
             createCrystalBall();
-            createRepoSmokeEffect(); // <-- Add this call
+            createRepoSmokeEffect();
 
             createParticles();
             createLights();
@@ -336,7 +333,6 @@
         }
 
         function createCrystalBall() {
-            // Optimized: Reduced sphere segments for better performance
             const geometry = new THREE.SphereGeometry(1.5, 64, 64); 
             const material = new THREE.MeshPhysicalMaterial({
                 roughness: 0, metalness: 0, transmission: 1.0,
@@ -349,7 +345,6 @@
         }
 
         function createParticles() {
-            // Optimized: Reduced particle count
             const particleCount = 1000; 
             const positions = new Float32Array(particleCount * 3);
             const colors = new Float32Array(particleCount * 3);
@@ -377,14 +372,12 @@
             scene.add(particleSystem);
         }
 
-        // Optimized: Removed unused createClouds() function
         function createRepoSmokeEffect() {
             const loader = new THREE.TextureLoader();
             const smokeTextureUrl = 'https://raw.githubusercontent.com/bobbyroe/Simple-Particle-Effects/master/img/smoke.png';
 
             loader.load(smokeTextureUrl, function(texture) {
-                // A single plane for our wisp of smoke
-                const smokeGeometry = new THREE.PlaneGeometry(1.8, 1.8); // Make it relatively large
+                const smokeGeometry = new THREE.PlaneGeometry(1.8, 1.8);
                 const smokeMaterial = new THREE.MeshBasicMaterial({
                     map: texture,
                     transparent: true,
@@ -394,8 +387,6 @@
                 });
 
                 singleSmokeWisp = new THREE.Mesh(smokeGeometry, smokeMaterial);
-                
-                // Add the single wisp inside the crystal ball
                 crystalBall.add(singleSmokeWisp);
             });
         }
@@ -448,13 +439,8 @@
                 particleSystem.rotation.y = elapsedTime * 0.05;
             }
             if (singleSmokeWisp) {
-                // 1. Make it always face the camera
                 singleSmokeWisp.lookAt(camera.position);
-
-                // 2. Make it float up and down smoothly using a sine wave
                 singleSmokeWisp.position.y = Math.sin(elapsedTime * 0.5) * 0.2;
-
-                // 3. Make it rotate slowly
                 singleSmokeWisp.rotation.z = elapsedTime * 0.1;
             }
             controls.update();
@@ -465,8 +451,6 @@
     </script>
 
     <script>
-    // Optimized: Removed dynamic PWA setup script. A static manifest is linked in <head>.
-
     document.addEventListener('DOMContentLoaded', () => {
         if (typeof window.init3D === 'function') {
             window.init3D();
@@ -502,13 +486,10 @@
                 return;
             }
 
-            // --- NEW: Start the effects ---
             crystalBallContainer.classList.add('holding');
             if ('vibrate' in navigator) {
-                navigator.vibrate(1200); // Vibrate for the duration of the hold
+                navigator.vibrate(1200);
             }
-            // --- End of new code ---
-
             if (window.expandParticles) window.expandParticles();
 
             holdTimeout = setTimeout(async () => {
@@ -555,12 +536,10 @@
         const handleEnd = () => { stopHolding(); };
         const stopHolding = () => {
             clearTimeout(holdTimeout);
-
             crystalBallContainer.classList.remove('holding');
             if ('vibrate' in navigator) {
-                navigator.vibrate(0); // A value of 0 stops any current vibration
+                navigator.vibrate(0);
             }
-
             if(window.shrinkParticles) window.shrinkParticles();
         };
         // --- MULTI-LANGUAGE IMPLEMENTATION ---
@@ -584,14 +563,13 @@
         }
 
         function getCurrentLang() { return localStorage.getItem('divinationAppLang') || 'zh-CN'; }
-
-        // Optimized: Create a debounced version of saveUserData
+        
         let saveTimeout;
         const debouncedSaveUserData = () => {
             clearTimeout(saveTimeout);
             saveTimeout = setTimeout(() => {
                 saveUserData();
-            }, 300); // Wait 300ms before saving
+            }, 300);
         };
         
         function saveUserData() { 
@@ -600,8 +578,7 @@
         }
         
         function loadUserData() {
-            console.log("loadUserData",userData);
-            const defaultData = { userId: null, birthDate: null, birthTime: null, timezone: null, lastDivinationDate: null, todayFortune: null, todayLuckyColorName: null, todayLuckyColorHex: null, todayLuckyNumber: null, lastTodoListUpdate: null, weeklyTodos: [], lastChatDate: null, chatCount: 0, conversationHistory: [] };
+            const defaultData = { userId: null, birthDate: null, birthTime: null, timezone: null, lastDivinationDate: null, todayDivination: null, lastTodoListUpdate: null, weeklyTodos: [], lastChatDate: null, chatCount: 0, conversationHistory: [] };
             const storedData = JSON.parse(localStorage.getItem('divinationAppUser')) || {};
             userData = { ...defaultData, ...storedData };
             if (!userData.userId) { 
@@ -610,10 +587,6 @@
             }
         }
         
-        // ... (The rest of your JavaScript logic remains largely the same)
-        // Just make sure to replace calls to `saveUserData()` with `debouncedSaveUserData()`
-        // in frequently triggered events like `handleTodoChange`.
-
         function initialize() { 
             loadUserData();
             populateTimezoneSelect();
@@ -630,18 +603,18 @@
             if(userData.timezone) inputs.timezone.value = userData.timezone;
         }
         
+        // FIX: Replaced with a more robust state check to prevent users from getting stuck.
         function checkInitialState() {
-            console.log("checkInitialState");
             const today = new Date().toDateString();
             let needsSave = false;
         
-            if (userData.lastDivinationDate !== today) {
-                userData.lastDivinationDate = null;
-                userData.todayFortune = null;
-                userData.todayLuckyColorName = null;
-                userData.todayLuckyColorHex = null;
-                userData.todayLuckyNumber = null;
-                needsSave = true;
+            // If it's a new day OR if the data for today is incomplete, reset the daily state.
+            if (userData.lastDivinationDate !== today || !userData.todayDivination) {
+                if (userData.lastDivinationDate || userData.todayDivination) {
+                    userData.lastDivinationDate = null;
+                    userData.todayDivination = null;
+                    needsSave = true;
+                }
             }
         
             if (userData.lastChatDate !== today) { 
@@ -653,7 +626,6 @@
             if (needsSave) saveUserData();
         
             if (!userData.birthDate || !userData.birthTime) {
-                localStorage.removeItem("divinationAppUser");
                 overlays.birthdayForm.classList.remove('hidden');
             } else {
                 overlays.birthdayForm.classList.add('hidden');
@@ -664,14 +636,12 @@
             updateLLMCounter();
         }
 
-        // Replace your existing displayTodayCard function
         function displayTodayCard() {
             const today = new Date().toDateString();
             const lang = getCurrentLang();
             const langKey = lang === 'zh-CN' ? 'zh' : 'en';
             const colorNameKey = lang === 'zh-CN' ? 'zh_name' : 'en_name';
 
-            // Check if a divination object exists for today
             if (userData.lastDivinationDate === today && userData.todayDivination) {
                 const divinationData = userData.todayDivination;
                 const luckyColorLabel = translations[lang]['lucky-color-label'] || 'Lucky Color';
@@ -690,7 +660,6 @@
                 displays.todayCard.classList.remove('hidden');
                 displays.infoText.textContent = translations[lang]['info-text-done'];
             } else {
-                // No fortune drawn today
                 displays.todayCard.classList.add('hidden');
                 displays.infoText.textContent = translations[lang]['info-text-initial'];
             }
@@ -714,7 +683,7 @@
                     overlays.birthdayForm.classList.add('hidden'); 
                     displays.infoText.textContent = translations[getCurrentLang()]['info-text-thanks']; 
                     displayProfileData(); 
-                    saveUserData(); // Save immediately after this important step
+                    saveUserData();
                 } 
             });
             
@@ -732,16 +701,10 @@
                 const today = new Date().toDateString();
                 if (userData.lastDivinationDate === today) {
                     const infoEl = displays.infoText;
-
-                    // Apply the glow effect
                     infoEl.classList.add('golden-glow');
-
-                    // Remove the glow effect after 1.5 seconds
                     setTimeout(() => {
                         infoEl.classList.remove('golden-glow');
                     }, 1500);
-
-                    // Stop here and DO NOT call the backend
                     return;
                 }
                 
@@ -755,32 +718,25 @@
             inputs.llmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLLMSubmit(); });
         }
 
-        // Add this new function to your main <script> tag
         function displayFortune(divinationData) {
-            console.log(divinationData);
             const lang = getCurrentLang();
             const langKey = lang === 'zh-CN' ? 'zh' : 'en';
             const colorNameKey = lang === 'zh-CN' ? 'zh_name' : 'en_name';
-
-            // Populate the modal
             displays.dailyFortune.textContent = divinationData.fortune[langKey];
-            
             const luckyColorLabel = translations[lang]['lucky-color-label'] || 'Lucky Color';
             const luckyNumberLabel = translations[lang]['lucky-number-label'] || 'Lucky Number';
-            
             displays.luckyColor.innerHTML = `${luckyColorLabel}: ${divinationData.luckyColor[colorNameKey]} <span class="color-swatch" style="background-color: ${divinationData.luckyColor.hex};"></span>`;
             displays.luckyNumber.textContent = `${luckyNumberLabel}: ${divinationData.luckyNumber}`;
-            
             overlays.fortuneModal.classList.remove('hidden');
-            displayTodayCard(); // Also update the card on the main screen
+            displayTodayCard();
         }
 
         function handleTodoChange(event) {
             const todoId = parseFloat(event.target.dataset.id);
             const todo = userData.weeklyTodos.find(t => t.id === todoId);
-            if (todo) { todo.completed = event.target.checked; saveUserData(); renderTodos(); }
+            if (todo) { todo.completed = event.target.checked; debouncedSaveUserData(); renderTodos(); }
         }
-// cloudflared tunnel run llm-service
+
         function addMessageToChat(messageObject) {
             const { sender, text, suggestions } = messageObject;
             const messageEl = document.createElement('div');
@@ -857,7 +813,6 @@
             if (!userData.birthDate) return;
             const birthDateTime = new Date(`${userData.birthDate}T${userData.birthTime}`);
             const [sunSign, sunEmoji] = getSunSign(birthDateTime);
-            console.log("sunSign, sunEmoji",userData.birthDate);
             const [moonSign, moonEmoji] = getMoonSign(birthDateTime);
             const [risingSign, risingEmoji] = getRisingSign(birthDateTime, parseInt(userData.timezone));
             displays.sunSign.textContent = sunSign; displays.sunEmoji.textContent = sunEmoji;
@@ -878,12 +833,6 @@
             document.querySelectorAll('.todo-list input[type="checkbox"]').forEach(checkbox => { checkbox.addEventListener('change', handleTodoChange); });
         }
         
-        function handleTodoChange(event) {
-            const todoId = parseFloat(event.target.dataset.id);
-            const todo = userData.weeklyTodos.find(t => t.id === todoId);
-            if (todo) { todo.completed = event.target.checked; saveUserData(); renderTodos(); }
-        }
-
         function generateAndDisplayTodos() {
             const today = new Date(); const lastUpdate = new Date(userData.lastTodoListUpdate || 0);
             const isMonday = today.getDay() === 1; const oneWeek = 6 * 24 * 60 * 60 * 1000;
@@ -933,7 +882,6 @@
         function getMoonSign(date) {
             const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
             const signIndex = Math.floor((dayOfYear / 2.5) + date.getDay()) % 12;
-            console.log("SIGNS[signIndex]",date,SIGNS[signIndex]);
             return SIGNS[signIndex];
         }
 
@@ -942,12 +890,9 @@
             const localHour = (utcHour + timezoneOffset + 24) % 24;
             const ARIES_INDEX = 3; 
             const signsToAdvance = Math.floor(localHour / 2);
-
             const signIndex = (ARIES_INDEX + signsToAdvance) % 12;
-
             return SIGNS[signIndex];
         }
-
 
         initialize();
     });
