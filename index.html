@@ -479,7 +479,7 @@
             startY = touch ? touch.clientY : e.clientY;
 
             const today = new Date().toDateString();
-            if (userData.lastDivinationDate === today) {
+            if (userData.lastDivinationDate === today && userData.todayDivination) {
                 const infoEl = displays.infoText;
                 infoEl.classList.add('golden-glow');
                 setTimeout(() => infoEl.classList.remove('golden-glow'), 1500);
@@ -699,7 +699,7 @@
             crystalBallContainer.addEventListener('click', async () => {
                 if (isDragging) return;
                 const today = new Date().toDateString();
-                if (userData.lastDivinationDate === today) {
+                if (userData.lastDivinationDate === today && userData.todayDivination) {
                     const infoEl = displays.infoText;
                     infoEl.classList.add('golden-glow');
                     setTimeout(() => {
