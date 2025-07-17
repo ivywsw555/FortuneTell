@@ -251,7 +251,8 @@
             <button class="cabin-button" id="cabin-button" data-translate-key="cabin-button-title" data-translate-prop="title" title="进入小屋"><svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg></button>
             <h1 class="title" data-translate-key="title">每日占卜</h1>
             <div class="crystal-ball-container" id="crystal-ball-container">
-                <div id="three-canvas-container"><div class="ball-stand"></div></div>
+                <div id="three-canvas-container"></div>
+                <!-- <div class="ball-stand"></div> -->
                 
             </div>
             <p class="info-text" id="info-text" data-translate-key="info-text-initial">轻触水晶球，揭示你今日的命运轨迹。</p>
@@ -266,8 +267,18 @@
     </div></div>
         
         <div id="birthday-form" class="overlay hidden"><div class="form-content"><h2 data-translate-key="birthday-form-title">魔法需要你的诞生时刻</h2><div class="input-group"><input type="date" id="birthdate-input" required><input type="time" id="birthtime-input" required></div><select id="timezone-input"></select><button id="submit-birthday" class="btn-primary" data-translate-key="submit-birthday-btn">确认时刻</button></div></div>
-        <div id="fortune-modal" class="overlay hidden"><div class="modal-content"><h3 data-translate-key="fortune-modal-title">今日运势</h3><p id="daily-fortune"></p><div class="lucky-elements"><div id="lucky-color"></div><div id="lucky-number"></div></div><button id="close-modal" class="btn-primary" data-translate-key="close-modal-btn">我明白了</button></div></div>
-        <button id="install-button" class="btn-primary" data-translate-key="install-button">安装应用</button>
+        <div id="fortune-modal" class="overlay hidden">
+            <div class="modal-content">
+                <h3 data-translate-key="fortune-modal-title">今日运势</h3>
+                <p id="daily-fortune"></p>
+                <div class="lucky-elements">
+                    <div id="lucky-color"></div>
+                    <div id="lucky-number"></div>
+                </div>
+                <button id="close-modal" class="btn-primary" data-translate-key="close-modal-btn">我明白了</button>
+            </div>
+        </div>
+        <button id="install-button" class="bt clasn-primary" data-translate-key="install-button">安装应用</button>
     </div>
 
     <script type="module">
@@ -648,6 +659,7 @@
                 const luckyNumberLabel = translations[lang]['lucky-number-label'] || 'Lucky Number';
                 const cardTitle = translations[lang]['today-card-title'] || "Today's Fortune";
 
+                console.log("divinationData",divinationData);
                 displays.todayCard.innerHTML = `
                     <h3>${cardTitle}</h3>
                     <p>${divinationData.fortune[langKey]}</p>
@@ -696,7 +708,7 @@
             crystalBallContainer.addEventListener('touchend', handleEnd);
             crystalBallContainer.addEventListener('touchcancel', handleEnd);
 
-            crystalBallContainer.addEventListener('click', async () => {
+            /*crystalBallContainer.addEventListener('click', async () => {
                 if (isDragging) return;
                 const today = new Date().toDateString();
                 if (userData.lastDivinationDate === today && userData.todayDivination) {
@@ -708,7 +720,7 @@
                     return;
                 }
                 
-            });
+            });*/
 
             buttons.closeModal.addEventListener('click', () => { 
                 overlays.fortuneModal.classList.add('hidden'); 
