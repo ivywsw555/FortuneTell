@@ -1,0 +1,21 @@
+{
+  "name": "Daily Divination | 3D Crystal Ball",
+  "short_name": "Divination",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#2c1f1f",
+  "theme_color": "#2c1f1f",
+  "description": "A daily divination app with a 3D crystal ball.",
+  "icons": [
+    {
+      "src": "icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
