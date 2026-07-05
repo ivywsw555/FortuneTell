@@ -1,6 +1,6 @@
 {
-  "name": "每日塔罗 | Daily Tarot",
-  "short_name": "每日塔罗",
+  "name": "Daily Tarot | 每日塔罗",
+  "short_name": "Daily Tarot",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#0d0a1f",

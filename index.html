@@ -1,10 +1,10 @@
 <!DOCTYPE html>
-<html lang="zh-CN">
+<html lang="en">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
 <meta name="theme-color" content="#0d0a1f">
-<title>每日塔罗 | Daily Tarot</title>
+<title>Daily Tarot | 每日塔罗</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Serif+SC:wght@400;600;700&display=swap">
@@ -34,7 +34,7 @@ body{
 
 /* ---------- shared UI ---------- */
 .btn{
-  font-family:'Noto Serif SC',serif; font-size:15px; letter-spacing:.35em; text-indent:.35em;
+  font-family:'Noto Serif SC',serif; font-size:15px; letter-spacing:.3em; text-indent:.3em;
   color:var(--ink); background:linear-gradient(180deg, rgba(232,199,111,.14), rgba(232,199,111,.04));
   border:1px solid rgba(232,199,111,.55); border-radius:999px;
   padding:12px 28px; cursor:pointer; backdrop-filter:blur(6px);
@@ -43,16 +43,18 @@ body{
 .btn:hover{ border-color:var(--gold); box-shadow:0 0 22px rgba(232,199,111,.28); transform:translateY(-1px); }
 .btn:active{ transform:translateY(1px) scale(.98); }
 .btn.primary{ background:linear-gradient(180deg, rgba(232,199,111,.32), rgba(200,160,70,.12)); font-weight:600; }
-.btn.ghost{ border-color:rgba(232,199,111,.25); color:var(--ink-dim); letter-spacing:.2em; font-size:13px; padding:9px 20px; }
+.btn.ghost{ border-color:rgba(232,199,111,.25); color:var(--ink-dim); letter-spacing:.18em; font-size:13px; padding:9px 20px; }
 .btn:disabled{ opacity:.35; pointer-events:none; }
 
-#sound-toggle{
-  position:fixed; top:calc(env(safe-area-inset-top, 0px) + 14px); right:16px; z-index:60;
-  width:42px; height:42px; border-radius:50%; border:1px solid rgba(232,199,111,.4);
-  background:rgba(20,15,45,.5); color:var(--gold); font-size:17px; cursor:pointer;
-  backdrop-filter:blur(6px); transition:all .25s;
+#sound-toggle,#lang-toggle{
+  position:fixed; top:calc(env(safe-area-inset-top, 0px) + 14px); z-index:60;
+  height:42px; border-radius:999px; border:1px solid rgba(232,199,111,.4);
+  background:rgba(20,15,45,.5); color:var(--gold); cursor:pointer;
+  backdrop-filter:blur(6px); transition:all .25s; font-family:'Noto Serif SC',serif;
 }
-#sound-toggle:hover{ box-shadow:0 0 16px rgba(232,199,111,.3); }
+#sound-toggle{ right:16px; width:42px; font-size:17px; }
+#lang-toggle{ left:16px; padding:0 16px; font-size:13.5px; letter-spacing:.1em; }
+#sound-toggle:hover,#lang-toggle:hover{ box-shadow:0 0 16px rgba(232,199,111,.3); }
 
 .screen{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
   transition:opacity .6s ease, transform .6s ease; }
@@ -60,23 +62,25 @@ body{
 
 /* ---------- welcome ---------- */
 #welcome{ text-align:center; padding:24px; gap:0; }
-.w-emblem{ width:min(150px,22vmin); margin-bottom:10px; filter:drop-shadow(0 0 24px rgba(232,199,111,.35));
+.w-emblem{ width:min(140px,20vmin); margin-bottom:10px; filter:drop-shadow(0 0 24px rgba(232,199,111,.35));
   animation:breathe 5s ease-in-out infinite; }
 @keyframes breathe{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } }
-.w-title-en{ font-family:Cinzel,serif; font-size:clamp(13px,2.4vmin,17px); letter-spacing:.7em; text-indent:.7em;
+.w-title-sub{ font-family:Cinzel,serif; font-size:clamp(13px,2.4vmin,17px); letter-spacing:.6em; text-indent:.6em;
   color:var(--gold-dim); margin-bottom:8px; }
-.w-title{ font-size:clamp(34px,8vmin,56px); font-weight:700; letter-spacing:.28em; text-indent:.28em;
+.w-title{ font-weight:700; letter-spacing:.16em; text-indent:.16em;
   background:linear-gradient(180deg,#fdf3d3 20%, var(--gold) 55%, #a5813e 100%);
   -webkit-background-clip:text; background-clip:text; color:transparent;
   filter:drop-shadow(0 2px 14px rgba(232,199,111,.25)); }
-.w-divider{ display:flex; align-items:center; gap:12px; margin:18px 0 10px; color:var(--gold-dim); opacity:.9; }
+.w-title.lat{ font-family:Cinzel,serif; font-size:clamp(30px,7vmin,50px); letter-spacing:.22em; text-indent:.22em; font-weight:600; }
+.w-title.han{ font-size:clamp(34px,8vmin,56px); letter-spacing:.28em; text-indent:.28em; }
+.w-divider{ display:flex; align-items:center; gap:12px; margin:16px 0 10px; color:var(--gold-dim); opacity:.9; }
 .w-divider::before,.w-divider::after{ content:""; width:min(90px,18vw); height:1px;
   background:linear-gradient(90deg, transparent, var(--gold-dim)); }
 .w-divider::after{ transform:scaleX(-1); }
-.w-sub{ color:var(--ink-dim); font-size:14px; letter-spacing:.25em; margin-bottom:34px; }
-.spreads{ display:flex; gap:16px; margin-bottom:34px; flex-wrap:wrap; justify-content:center; }
+.w-sub{ color:var(--ink-dim); font-size:14px; letter-spacing:.14em; margin-bottom:26px; }
+.spreads{ display:flex; gap:16px; margin-bottom:24px; flex-wrap:wrap; justify-content:center; }
 .spread-opt{
-  width:min(178px,42vw); padding:18px 12px 16px; border-radius:14px; cursor:pointer;
+  width:min(180px,42vw); padding:18px 12px 16px; border-radius:14px; cursor:pointer;
   border:1px solid rgba(232,199,111,.28); background:linear-gradient(180deg, rgba(36,26,77,.55), rgba(16,12,38,.55));
   transition:all .3s ease; position:relative;
 }
@@ -88,9 +92,19 @@ body{
   box-shadow:0 3px 8px rgba(0,0,0,.5); }
 .spread-opt .so-cards i:nth-child(2){ height:44px; width:28px; }
 .spread-opt.on .so-cards i{ border-color:var(--gold); box-shadow:0 0 10px rgba(232,199,111,.35); }
-.spread-opt .so-name{ font-size:16px; letter-spacing:.2em; margin-bottom:4px; }
-.spread-opt .so-desc{ font-size:12px; color:var(--ink-dim); letter-spacing:.1em; }
-#today-chip{ margin-top:18px; font-size:13px; color:var(--ink-dim); letter-spacing:.15em;
+.spread-opt .so-name{ font-size:15.5px; letter-spacing:.12em; margin-bottom:4px; }
+.spread-opt .so-desc{ font-size:11.5px; color:var(--ink-dim); letter-spacing:.08em; }
+.q-wrap{ width:min(400px, 86vw); margin-bottom:26px; position:relative; }
+#q-input{
+  width:100%; background:transparent; border:none; outline:none;
+  border-bottom:1px solid rgba(232,199,111,.35);
+  font-family:'Noto Serif SC',serif; font-size:14.5px; color:var(--ink);
+  text-align:center; padding:8px 6px; letter-spacing:.06em; transition:border-color .3s;
+}
+#q-input::placeholder{ color:rgba(185,170,136,.55); letter-spacing:.1em; }
+#q-input:focus{ border-bottom-color:var(--gold); }
+.q-wrap::after{ content:"✦"; position:absolute; right:-4px; bottom:8px; color:rgba(232,199,111,.4); font-size:11px; pointer-events:none; }
+#today-chip{ margin-top:18px; font-size:13px; color:var(--ink-dim); letter-spacing:.1em;
   border:none; background:none; cursor:pointer; text-decoration:underline dotted rgba(232,199,111,.5);
   text-underline-offset:5px; font-family:inherit; }
 #today-chip:hover{ color:var(--gold); }
@@ -99,10 +113,10 @@ body{
 #table{ justify-content:flex-start; }
 #hint{
   margin-top:calc(env(safe-area-inset-top, 0px) + 26px); text-align:center; min-height:52px; z-index:40;
-  font-size:clamp(15px,2.6vmin,18px); letter-spacing:.3em; text-indent:.3em; color:var(--ink);
+  font-size:clamp(15px,2.6vmin,18px); letter-spacing:.16em; text-indent:.16em; color:var(--ink);
   text-shadow:0 0 18px rgba(232,199,111,.25); transition:opacity .4s; padding:0 20px;
 }
-#hint small{ display:block; font-size:12px; letter-spacing:.2em; color:var(--ink-dim); margin-top:7px; }
+#hint small{ display:block; font-size:12px; letter-spacing:.14em; color:var(--ink-dim); margin-top:7px; }
 #stage{ position:absolute; inset:0; }
 
 /* ritual circle under the deck */
@@ -115,8 +129,8 @@ body{
   transform:translate(-50%,-46%); border-radius:50%; pointer-events:none;
   background:radial-gradient(closest-side, rgba(232,199,111,.20), rgba(232,199,111,.05) 55%, transparent 72%);
   animation:glowpulse 3.4s ease-in-out infinite; transition:opacity .6s; }
-#deck-glow.off{ animation:none; opacity:0; }
 @keyframes glowpulse{ 0%,100%{ opacity:.65; transform:translate(-50%,-46%) scale(1);} 50%{ opacity:1; transform:translate(-50%,-46%) scale(1.07);} }
+#deck-glow.off{ animation:none; opacity:0; }
 
 /* ---------- cards ---------- */
 .card{
@@ -158,7 +172,7 @@ body{
 .slot-tag{
   position:absolute; left:50%; bottom:-34px; transform:translateX(-50%);
   transform-origin:50% 0;
-  font-size:12.5px; letter-spacing:.3em; text-indent:.3em; color:var(--gold-dim); white-space:nowrap;
+  font-size:12.5px; letter-spacing:.25em; text-indent:.25em; color:var(--gold-dim); white-space:nowrap;
   opacity:0; transition:opacity .6s .3s;
 }
 .card.placed .slot-tag{ opacity:1; }
@@ -200,25 +214,41 @@ body{
 .sheet-handle{ width:44px; height:4px; border-radius:2px; background:rgba(232,199,111,.4); margin:0 auto 14px; }
 .reading{ padding:6px 0 14px; }
 .reading + .reading{ border-top:1px dashed rgba(232,199,111,.22); padding-top:16px; }
-.r-pos{ font-size:12px; letter-spacing:.4em; text-indent:.4em; color:var(--gold-dim); text-align:center; margin-bottom:6px; }
+.r-pos{ font-size:12px; letter-spacing:.35em; text-indent:.35em; color:var(--gold-dim); text-align:center; margin-bottom:6px; font-family:Cinzel,serif; }
 .r-head{ display:flex; align-items:baseline; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
-.r-name{ font-size:22px; font-weight:700; letter-spacing:.14em; color:var(--ink); }
-.r-en{ font-family:Cinzel,serif; font-size:12px; letter-spacing:.22em; color:var(--ink-dim); }
-.r-ori{ font-size:11.5px; padding:2.5px 10px; border-radius:999px; letter-spacing:.2em; text-indent:.2em; }
+.r-name{ font-size:21px; font-weight:700; letter-spacing:.06em; color:var(--ink); }
+.r-name.lat{ font-family:Cinzel,serif; font-weight:600; letter-spacing:.1em; }
+.r-en{ font-family:Cinzel,serif; font-size:12px; letter-spacing:.2em; color:var(--ink-dim); }
+.r-ori{ font-size:11.5px; padding:2.5px 10px; border-radius:999px; letter-spacing:.14em; text-indent:.14em; }
 .r-ori.up{ color:#ffe9ad; border:1px solid rgba(232,199,111,.55); background:rgba(232,199,111,.12); }
 .r-ori.rev{ color:#c9b6ff; border:1px solid rgba(156,124,255,.5); background:rgba(124,92,220,.14); }
 .r-kws{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:10px 0 12px; }
 .r-kw{ font-size:12px; color:var(--gold-dim); border:1px solid rgba(232,199,111,.3); border-radius:999px;
-  padding:3px 12px; letter-spacing:.15em; background:rgba(232,199,111,.05); }
-.r-text{ font-size:14.5px; line-height:1.95; color:var(--ink); text-align:justify; letter-spacing:.04em; }
-.r-adv{ margin-top:12px; font-size:13.5px; line-height:1.8; color:var(--gold-dim); text-align:center;
-  padding:10px 14px; border-radius:12px; background:rgba(232,199,111,.06); letter-spacing:.06em; }
-.r-adv b{ color:var(--gold); font-weight:600; letter-spacing:.25em; }
+  padding:3px 12px; letter-spacing:.08em; background:rgba(232,199,111,.05); }
+.r-text{ font-size:14.5px; line-height:1.9; color:var(--ink); text-align:justify; letter-spacing:.02em; }
 .sheet-btns{ display:flex; justify-content:center; gap:12px; margin-top:6px; padding-top:14px;
   border-top:1px solid rgba(232,199,111,.18); flex-wrap:wrap; }
+
+/* oracle block */
+.oracle{ margin-top:14px; border:1px solid rgba(232,199,111,.3); border-radius:14px;
+  padding:14px 16px 16px; background:linear-gradient(180deg, rgba(232,199,111,.07), rgba(232,199,111,.02)); }
+.o-head{ display:flex; align-items:center; justify-content:center; gap:10px; margin-bottom:10px; flex-wrap:wrap; }
+.o-title{ font-family:Cinzel,serif; font-size:13px; letter-spacing:.3em; text-indent:.3em; color:var(--gold); }
+.o-badge{ font-size:10.5px; letter-spacing:.12em; color:var(--ink-dim); border:1px solid rgba(232,199,111,.25);
+  border-radius:999px; padding:2px 10px; }
+.o-text{ font-size:14.5px; line-height:1.95; color:var(--ink); text-align:justify; letter-spacing:.02em; min-height:28px; }
+.o-text .o-shimmer{
+  background:linear-gradient(90deg, var(--ink-dim) 25%, #fff6d8 50%, var(--ink-dim) 75%);
+  background-size:200% 100%; -webkit-background-clip:text; background-clip:text; color:transparent;
+  animation:shimmer 1.6s linear infinite; letter-spacing:.08em;
+}
+@keyframes shimmer{ to{ background-position:-200% 0 } }
+.o-q{ text-align:center; font-size:12.5px; color:var(--ink-dim); margin-bottom:8px; letter-spacing:.04em; }
+.o-q b{ color:var(--gold-dim); font-weight:400; }
+
 #toast{ position:fixed; left:50%; top:18%; transform:translate(-50%,-8px); z-index:99;
   background:rgba(20,15,45,.9); border:1px solid rgba(232,199,111,.5); color:var(--ink);
-  font-size:13.5px; letter-spacing:.2em; padding:10px 22px; border-radius:999px;
+  font-size:13.5px; letter-spacing:.12em; padding:10px 22px; border-radius:999px;
   opacity:0; pointer-events:none; transition:all .4s; backdrop-filter:blur(8px); }
 #toast.show{ opacity:1; transform:translate(-50%,0); }
 
@@ -226,9 +256,11 @@ body{
 text.rn{ font-family:Cinzel,serif; font-size:30px; fill:var(--gold); letter-spacing:3px; }
 text.zh{ font-family:'Noto Serif SC',serif; font-size:34px; font-weight:600; fill:var(--ink); letter-spacing:8px; }
 text.en{ font-family:Cinzel,serif; font-size:14.5px; fill:var(--gold-dim); letter-spacing:3px; }
+text.fen{ font-family:Cinzel,serif; fill:var(--ink); letter-spacing:2px; font-weight:600; }
+text.fzh{ font-family:'Noto Serif SC',serif; font-size:17px; fill:var(--gold-dim); letter-spacing:7px; }
 
-@media (max-height:620px){
-  .w-sub{ margin-bottom:20px } .spreads{ margin-bottom:20px }
+@media (max-height:640px){
+  .w-sub{ margin-bottom:16px } .spreads{ margin-bottom:16px } .q-wrap{ margin-bottom:18px }
   #sheet{ max-height:62% }
 }
 </style>
@@ -329,7 +361,8 @@ text.en{ font-family:Cinzel,serif; font-size:14.5px; fill:var(--gold-dim); lette
 </defs>
 </svg>
 
-<button id="sound-toggle" title="音效">♪</button>
+<button id="lang-toggle" title="Language">中文</button>
+<button id="sound-toggle" title="Sound">♪</button>
 
 <div id="app">
 
@@ -343,24 +376,25 @@ text.en{ font-family:Cinzel,serif; font-size:14.5px; fill:var(--gold-dim); lette
       <use href="#spark4" transform="translate(95,32) scale(.8)"/>
       <use href="#spark4" transform="translate(28,90) scale(.7)"/>
     </svg>
-    <div class="w-title-en">DAILY&nbsp;TAROT</div>
-    <h1 class="w-title">每日塔罗</h1>
+    <div class="w-title-sub" id="t-sub"></div>
+    <h1 class="w-title lat" id="t-main"></h1>
     <div class="w-divider">✦</div>
-    <p class="w-sub">静心凝神 · 让命运之牌为今日引路</p>
+    <p class="w-sub" id="t-tag"></p>
     <div class="spreads">
       <div class="spread-opt on" data-n="1">
         <div class="so-cards"><i></i></div>
-        <div class="so-name">今日指引</div>
-        <div class="so-desc">抽取一张 · today's card</div>
+        <div class="so-name" id="sp1-name"></div>
+        <div class="so-desc" id="sp1-desc"></div>
       </div>
       <div class="spread-opt" data-n="3">
         <div class="so-cards"><i></i><i></i><i></i></div>
-        <div class="so-name">时之牌阵</div>
-        <div class="so-desc">过去 · 现在 · 未来</div>
+        <div class="so-name" id="sp3-name"></div>
+        <div class="so-desc" id="sp3-desc"></div>
       </div>
     </div>
-    <button class="btn primary" id="btn-start">开启占卜</button>
-    <button id="today-chip" style="display:none">✦ 今日已留下指引，点此回顾 ✦</button>
+    <div class="q-wrap"><input id="q-input" maxlength="140" autocomplete="off"></div>
+    <button class="btn primary" id="btn-start"></button>
+    <button id="today-chip" style="display:none"></button>
   </section>
 
   <!-- TABLE -->
@@ -382,105 +416,105 @@ text.en{ font-family:Cinzel,serif; font-size:14.5px; fill:var(--gold-dim); lette
 <script>
 "use strict";
 /* ============================================================
-   每日塔罗 — Major Arcana data (22 cards)
+   Major Arcana — art (22 hand-drawn gold line emblems)
    ============================================================ */
 const ART = [
-/*0 愚者*/ `<circle cx="152" cy="42" r="18"/><path d="M152 12v10M152 62v10M122 42h10M172 42h10M131 21l7 7M166 56l7 7M173 21l-7 7M138 56l-7 7" stroke-width="2"/>
+/*0*/ `<circle cx="152" cy="42" r="18"/><path d="M152 12v10M152 62v10M122 42h10M172 42h10M131 21l7 7M166 56l7 7M173 21l-7 7M138 56l-7 7" stroke-width="2"/>
 <path d="M36 168 C36 120 78 96 104 108 C132 120 128 158 100 160 C80 161 72 142 86 132" />
 <circle cx="90" cy="128" r="4" fill="#e8c76f" stroke="none"/>
 <use href="#spark4" transform="translate(52,80) scale(.8)"/><use href="#spark4" transform="translate(160,150) scale(.6)"/>`,
-/*1 魔术师*/ `<path d="M62 46 C62 30 94 30 100 46 C106 62 138 62 138 46 C138 30 106 30 100 46 C94 62 62 62 62 46 Z" stroke-width="2.4"/>
+/*1*/ `<path d="M62 46 C62 30 94 30 100 46 C106 62 138 62 138 46 C138 30 106 30 100 46 C94 62 62 62 62 46 Z" stroke-width="2.4"/>
 <path d="M100 74 V150"/><circle cx="100" cy="70" r="4.5" fill="#e8c76f" stroke="none"/><circle cx="100" cy="154" r="4.5" fill="#e8c76f" stroke="none"/>
 <path d="M40 176 H160" stroke-width="2.4"/>
 <circle cx="56" cy="164" r="7"/><path d="M84 158 a8 8 0 0 0 16 0 M92 166 v6" stroke-width="2"/><path d="M124 156 v16 M118 160 h12" stroke-width="2"/><circle cx="148" cy="164" r="7"/><path d="M148 158 l2 4 4 0 -3 3 1 5 -4 -3 -4 3 1 -5 -3 -3 4 0 Z" fill="#e8c76f" stroke="none"/>`,
-/*2 女祭司*/ `<path d="M42 40 V168 M30 40 H54 M32 168 H52" stroke-width="2.6"/><path d="M158 40 V168 M146 40 H170 M148 168 H168" stroke-width="2.6"/>
+/*2*/ `<path d="M42 40 V168 M30 40 H54 M32 168 H52" stroke-width="2.6"/><path d="M158 40 V168 M146 40 H170 M148 168 H168" stroke-width="2.6"/>
 <path d="M112,58 A42 42 0 1 0 112,134 A32 32 0 1 1 112,58 Z" fill="#e8c76f" stroke="none" opacity=".92"/>
 <path d="M60 178 Q100 160 140 178" stroke-width="2" opacity=".7"/>
 <use href="#spark4" transform="translate(100,26) scale(.7)"/>`,
-/*3 女皇*/ `<circle cx="100" cy="72" r="34" stroke-width="2.6"/><path d="M100 106 V162 M78 136 H122" stroke-width="2.6"/>
+/*3*/ `<circle cx="100" cy="72" r="34" stroke-width="2.6"/><path d="M100 106 V162 M78 136 H122" stroke-width="2.6"/>
 <path d="M40 170 Q46 120 66 96" opacity=".8"/><path d="M46 150 l-10 -4 M52 130 l-10 -6 M60 112 l-9 -8" stroke-width="2"/>
 <path d="M160 170 Q154 120 134 96" opacity=".8"/><path d="M154 150 l10 -4 M148 130 l10 -6 M140 112 l9 -8" stroke-width="2"/>
 <use href="#spark4" transform="translate(100,72) scale(1)"/>`,
-/*4 皇帝*/ `<rect x="52" y="64" width="96" height="96" stroke-width="2.6"/><circle cx="100" cy="112" r="30" stroke-width="2"/>
+/*4*/ `<rect x="52" y="64" width="96" height="96" stroke-width="2.6"/><circle cx="100" cy="112" r="30" stroke-width="2"/>
 <path d="M52 64 C36 60 30 42 44 34 C56 27 66 38 58 48" stroke-width="2.4"/>
 <path d="M148 64 C164 60 170 42 156 34 C144 27 134 38 142 48" stroke-width="2.4"/>
 <path d="M100 96 V128 M88 112 H112" stroke-width="2.4"/><circle cx="100" cy="112" r="3" fill="#e8c76f" stroke="none"/>`,
-/*5 教皇*/ `<path d="M100 30 V158" stroke-width="2.6"/><path d="M76 56 H124 M70 82 H130 M64 108 H136" stroke-width="2.4"/>
+/*5*/ `<path d="M100 30 V158" stroke-width="2.6"/><path d="M76 56 H124 M70 82 H130 M64 108 H136" stroke-width="2.4"/>
 <path d="M30 40 Q100 -14 170 40" opacity=".6"/>
 <g stroke-width="2"><circle cx="72" cy="168" r="9"/><path d="M80 162 L118 140 M108 146 l4 7 M114 142 l4 7"/>
 <circle cx="128" cy="168" r="9"/><path d="M120 162 L82 140 M92 146 l-4 7 M86 142 l-4 7"/></g>`,
-/*6 恋人*/ `<circle cx="100" cy="42" r="16"/><path d="M100 18v-8M100 74v-8M76 42h-8M132 42h-8M83 25l-6-6M123 65l-6-6M117 25l6-6M89 65l6-6" stroke-width="2"/>
+/*6*/ `<circle cx="100" cy="42" r="16"/><path d="M100 18v-8M100 74v-8M76 42h-8M132 42h-8M83 25l-6-6M123 65l-6-6M117 25l6-6M89 65l6-6" stroke-width="2"/>
 <circle cx="76" cy="124" r="34" stroke-width="2.4"/><circle cx="124" cy="124" r="34" stroke-width="2.4"/>
 <path d="M100 118 c-6 -9 -19 -4 -16 6 c2 8 12 12 16 16 c4 -4 14 -8 16 -16 c3 -10 -10 -15 -16 -6 Z" fill="#e8c76f" stroke="none"/>`,
-/*7 战车*/ `<rect x="46" y="76" width="108" height="66" stroke-width="2.6"/><path d="M46 76 L60 46 H140 L154 76" stroke-width="2.4"/>
+/*7*/ `<rect x="46" y="76" width="108" height="66" stroke-width="2.6"/><path d="M46 76 L60 46 H140 L154 76" stroke-width="2.4"/>
 <use href="#spark4" transform="translate(78,61) scale(.7)"/><use href="#spark4" transform="translate(100,58) scale(.9)"/><use href="#spark4" transform="translate(122,61) scale(.7)"/>
 <g stroke-width="2.2"><circle cx="70" cy="160" r="16"/><path d="M70 146v28M56 160h28M60 150l20 20M80 150l-20 20"/>
 <circle cx="130" cy="160" r="16"/><path d="M130 146v28M116 160h28M120 150l20 20M140 150l-20 20"/></g>`,
-/*8 力量*/ `<path d="M62 36 C62 22 90 22 96 36 C102 50 130 50 130 36 C130 22 102 22 96 36 C90 50 62 50 62 36 Z" stroke-width="2.2"/>
+/*8*/ `<path d="M62 36 C62 22 90 22 96 36 C102 50 130 50 130 36 C130 22 102 22 96 36 C90 50 62 50 62 36 Z" stroke-width="2.2"/>
 <circle cx="100" cy="112" r="34" stroke-width="2.6"/>
 <path d="M100 70 l4 -12 M78 78 l-4 -12 M122 78 l4 -12 M64 98 l-12 -6 M136 98 l12 -6 M64 128 l-12 6 M136 128 l12 6 M82 142 l-6 11 M118 142 l6 11 M100 146 l0 12" stroke-width="2"/>
 <path d="M58 168 Q100 186 142 168" stroke-width="2.4"/>
 <circle cx="88" cy="106" r="2.5" fill="#e8c76f" stroke="none"/><circle cx="112" cy="106" r="2.5" fill="#e8c76f" stroke="none"/><path d="M92 122 Q100 128 108 122" stroke-width="2"/>`,
-/*9 隐士*/ `<path d="M100 30 L128 46 V82 L100 98 L72 82 V46 Z" stroke-width="2.4"/>
+/*9*/ `<path d="M100 30 L128 46 V82 L100 98 L72 82 V46 Z" stroke-width="2.4"/>
 <path d="M100 44 l6 10 12 0 -9 9 3 13 -12 -7 -12 7 3 -13 -9 -9 12 0 Z" fill="#e8c76f" stroke="none"/>
 <path d="M100 98 V150" stroke-width="2.2"/>
 <path d="M28 178 L64 128 L88 160 L118 112 L172 178" stroke-width="2.4"/>
 <use href="#spark4" transform="translate(150,60) scale(.6)"/>`,
-/*10 命运之轮*/ `<circle cx="100" cy="104" r="62" stroke-width="2.6"/><circle cx="100" cy="104" r="44" stroke-width="1.4" opacity=".7"/>
+/*10*/ `<circle cx="100" cy="104" r="62" stroke-width="2.6"/><circle cx="100" cy="104" r="44" stroke-width="1.4" opacity=".7"/>
 <path d="M100 42 v124 M38 104 h124 M56 60 l88 88 M144 60 l-88 88" stroke-width="1.8"/>
 <circle cx="100" cy="104" r="10" fill="#e8c76f" stroke="none"/>
 <path d="M100 24 l7 12 h-14 Z M100 184 l-7 -12 h14 Z M20 104 l12 -7 v14 Z M180 104 l-12 7 v-14 Z" fill="#e8c76f" stroke="none"/>`,
-/*11 正义*/ `<path d="M100 34 V150 M92 150 H108 M100 34 l-6 12 h12 Z" stroke-width="2.4"/>
+/*11*/ `<path d="M100 34 V150 M92 150 H108 M100 34 l-6 12 h12 Z" stroke-width="2.4"/>
 <path d="M40 62 H160" stroke-width="2.6"/>
 <path d="M56 62 v10 M40 92 a16 16 0 0 0 32 0 Z M56 72 l-14 20 M56 72 l14 20" stroke-width="2"/>
 <path d="M144 62 v10 M128 92 a16 16 0 0 0 32 0 Z M144 72 l-14 20 M144 72 l14 20" stroke-width="2"/>
 <circle cx="100" cy="62" r="6" fill="#e8c76f" stroke="none"/>`,
-/*12 倒吊人*/ `<path d="M48 36 H152 M64 36 V60 M136 36 V60" stroke-width="2.6"/>
+/*12*/ `<path d="M48 36 H152 M64 36 V60 M136 36 V60" stroke-width="2.6"/>
 <path d="M100 36 V78" stroke-width="2.2"/>
 <path d="M100 78 L74 122 H126 Z" stroke-width="2.4"/>
 <circle cx="100" cy="140" r="16" stroke-width="2.4"/>
 <circle cx="100" cy="140" r="26" stroke-width="1.2" opacity=".6" stroke-dasharray="2 5"/>
 <use href="#spark4" transform="translate(100,140) scale(.8)"/>`,
-/*13 死神*/ `<path d="M100 92 m-30,0 a30,30 0 1,1 60,0 a30,30 0 1,1 -60,0" stroke-width="2.2"/>
+/*13*/ `<path d="M100 92 m-30,0 a30,30 0 1,1 60,0 a30,30 0 1,1 -60,0" stroke-width="2.2"/>
 <path d="M100 92 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0" stroke-width="1.6" opacity=".75"/>
 <path d="M100 92 m-7,0 a7,7 0 1,1 14,0 a7,7 0 1,1 -14,0" stroke-width="1.4" opacity=".6"/>
 <path d="M100 122 V168 M100 138 C86 132 80 138 78 146 M100 148 C114 142 120 148 122 156" stroke-width="2.2"/>
 <path d="M30 178 H170" stroke-width="2"/><path d="M64 178 a36 36 0 0 1 72 0" stroke-width="2.4"/>`,
-/*14 节制*/ `<circle cx="100" cy="48" r="22" stroke-width="2.2"/><path d="M100 32 L114 58 H86 Z" stroke-width="2"/>
+/*14*/ `<circle cx="100" cy="48" r="22" stroke-width="2.2"/><path d="M100 32 L114 58 H86 Z" stroke-width="2"/>
 <path d="M40 108 h36 l-5 44 h-26 Z" stroke-width="2.4"/><path d="M124 108 h36 l-5 44 h-26 Z" stroke-width="2.4"/>
 <path d="M76 112 C96 118 104 134 124 118" stroke-width="2"/><path d="M80 120 C98 128 106 142 120 128" stroke-width="1.6" opacity=".7"/>
 <use href="#spark4" transform="translate(100,86) scale(.6)"/>`,
-/*15 恶魔*/ `<circle cx="100" cy="96" r="58" stroke-width="2.4"/>
+/*15*/ `<circle cx="100" cy="96" r="58" stroke-width="2.4"/>
 <path d="M100 141 L73.6 59.6 L142.8 109.9 L57.2 109.9 L126.4 59.6 Z" stroke-width="2.2"/>
 <path d="M52 48 C40 34 44 20 58 22 M148 48 C160 34 156 20 142 22" stroke-width="2.4"/>
 <g stroke-width="2"><circle cx="80" cy="172" r="8"/><circle cx="94" cy="172" r="8"/><circle cx="108" cy="172" r="8"/><circle cx="122" cy="172" r="8"/></g>`,
-/*16 高塔*/ `<path d="M72 176 V64 H128 V176" stroke-width="2.6"/><path d="M64 64 H136 M72 64 V50 H86 V64 M94 64 V50 H108 V64 M116 64 V50 H128 V64" stroke-width="2.2"/>
+/*16*/ `<path d="M72 176 V64 H128 V176" stroke-width="2.6"/><path d="M64 64 H136 M72 64 V50 H86 V64 M94 64 V50 H108 V64 M116 64 V50 H128 V64" stroke-width="2.2"/>
 <path d="M160 20 L120 62 L138 66 L96 118" stroke-width="2.6"/>
 <path d="M84 40 L70 26 M64 46 l-12 -6 M150 84 l14 8 M146 102 l12 12" stroke-width="2"/>
 <path d="M88 176 v-28 h24 v28" stroke-width="2"/>`,
-/*17 星星*/ `<g fill="#e8c76f" stroke="none"><path d="M100,28 L107,63 L142,70 L107,77 L100,112 L93,77 L58,70 L93,63 Z"/></g>
+/*17*/ `<g fill="#e8c76f" stroke="none"><path d="M100,28 L107,63 L142,70 L107,77 L100,112 L93,77 L58,70 L93,63 Z"/></g>
 <use href="#spark4" transform="translate(48,40) scale(.75)"/><use href="#spark4" transform="translate(152,40) scale(.75)"/>
 <use href="#spark4" transform="translate(30,86) scale(.6)"/><use href="#spark4" transform="translate(170,86) scale(.6)"/>
 <use href="#spark4" transform="translate(58,120) scale(.55)"/><use href="#spark4" transform="translate(142,120) scale(.55)"/><use href="#spark4" transform="translate(100,10) scale(.5)"/>
 <path d="M84 128 C80 146 84 158 78 172 M116 128 C120 146 116 158 122 172" stroke-width="2"/>
 <path d="M36 178 q16 -9 32 0 t32 0 t32 0 t32 0" stroke-width="2.2"/>`,
-/*18 月亮*/ `<path d="M118,34 A50 50 0 1 0 118,126 A38 38 0 1 1 118,34 Z" fill="#e8c76f" stroke="none" opacity=".95"/>
+/*18*/ `<path d="M118,34 A50 50 0 1 0 118,126 A38 38 0 1 1 118,34 Z" fill="#e8c76f" stroke="none" opacity=".95"/>
 <path d="M60 116 l-3 12 M100 128 l0 12 M78 124 l-2 12" stroke-width="2" opacity=".8"/>
 <path d="M30 178 V150 H46 V178 M154 178 V150 H170 V178 M30 150 l8 -10 8 10 M154 150 l8 -10 8 10" stroke-width="2.2"/>
 <path d="M56 178 Q100 156 144 178" stroke-width="2" stroke-dasharray="4 6"/>`,
-/*19 太阳*/ `<circle cx="100" cy="92" r="34" stroke-width="2.6"/>
+/*19*/ `<circle cx="100" cy="92" r="34" stroke-width="2.6"/>
 <path d="M100 40 V16 M100 144 V168 M48 92 H24 M176 92 H152" stroke-width="2.2"/>
 <path d="M64 56 q-8 -2 -12 -12 M136 56 q8 -2 12 -12 M64 128 q-8 2 -12 12 M136 128 q8 2 12 12" stroke-width="2.2"/>
 <path d="M76 32 l-6 -14 M124 32 l6 -14 M76 152 l-6 14 M124 152 l6 14" stroke-width="1.8" opacity=".8"/>
 <circle cx="88" cy="86" r="2.5" fill="#e8c76f" stroke="none"/><circle cx="112" cy="86" r="2.5" fill="#e8c76f" stroke="none"/>
 <path d="M88 102 Q100 110 112 102" stroke-width="2"/>
 <path d="M40 184 q20 -12 40 0 t40 0 t40 0" stroke-width="2.2"/>`,
-/*20 审判*/ `<path d="M36 60 L128 34 V54 L36 80 Z" stroke-width="2.2"/>
+/*20*/ `<path d="M36 60 L128 34 V54 L36 80 Z" stroke-width="2.2"/>
 <path d="M128 24 V64 M128 24 h34 v22 l-12 -6 -12 6 v-16" stroke-width="2.2"/>
 <path d="M36 92 l-10 10 M52 96 l-8 12 M68 100 l-6 13" stroke-width="2"/>
 <path d="M52 178 a14 14 0 0 1 28 0 M86 178 a14 14 0 0 1 28 0 M120 178 a14 14 0 0 1 28 0" stroke-width="2.4"/>
 <path d="M66 158 v-10 M100 158 v-14 M134 158 v-10" stroke-width="2"/>`,
-/*21 世界*/ `<ellipse cx="100" cy="100" rx="58" ry="74" stroke-width="2.4"/>
+/*21*/ `<ellipse cx="100" cy="100" rx="58" ry="74" stroke-width="2.4"/>
 <path d="M64 44 l-9 -7 M52 66 l-11 -4 M46 92 l-12 -1 M46 118 l-12 2 M52 142 l-11 5 M64 164 l-9 7" stroke-width="2"/>
 <path d="M136 44 l9 -7 M148 66 l11 -4 M154 92 l12 -1 M154 118 l12 2 M148 142 l11 5 M136 164 l9 7" stroke-width="2"/>
 <use href="#spark4" transform="translate(100,100) scale(2.4)"/>
@@ -488,96 +522,250 @@ const ART = [
 <use href="#spark4" transform="translate(70,100) scale(.7)"/><use href="#spark4" transform="translate(130,100) scale(.7)"/>`
 ];
 
+/* ============================================================
+   Major Arcana — bilingual data (traditional RWS meanings)
+   ============================================================ */
 const CARDS = [
-{zh:"愚者", en:"The Fool", rn:"0", kw:["新的开始","自由","纯真"], rkw:["鲁莽","迷茫","踌躇不前"],
- up:"愚者踏上未知的旅程，行囊很轻、心却很满。今天适合放下顾虑，去尝试那件你一直想做却没做的事。世界会温柔接住勇敢的人。",
- rev:"逆位的愚者提醒你：热情虽好，也别忘了看清脚下。今天做决定前多想一步，避免因一时冲动而绕远路。",
- adv:"带着好奇出发，比带着答案出发更重要。"},
-{zh:"魔术师", en:"The Magician", rn:"I", kw:["创造","行动力","心想事成"], rkw:["犹豫","才华未展","分心"],
- up:"你手中已握有所需的一切资源。今天灵感与行动力俱佳，是启动新计划、表达自我、谈成事情的黄金时机。",
- rev:"能量有些散乱，想法很多却难以落地。今天试着只专注一件事，把它做完，胜过十件半途而废。",
- adv:"意念所至，能量随行——先开口，先动手。"},
-{zh:"女祭司", en:"The High Priestess", rn:"II", kw:["直觉","静观","内在智慧"], rkw:["忽视直觉","焦躁","秘密"],
- up:"答案不在外界的喧嚣里，而在你安静下来的心中。今天请多倾听直觉，它比逻辑更早知道真相。",
- rev:"你可能一直在压抑内心的声音。今天留一段独处时间，问问自己真正想要什么，再做回应。",
- adv:"少说，多听；少刷，多想。"},
-{zh:"女皇", en:"The Empress", rn:"III", kw:["丰盛","滋养","美与爱"], rkw:["过度付出","依赖","停滞"],
- up:"女皇带来丰盛与温柔的能量。今天适合善待自己、经营关系、享受生活中的美好细节，收获会自然到来。",
- rev:"你是否付出太多而忘了自己？今天请先照顾好自己的需求，爱人先自爱。",
- adv:"给自己一顿好饭、一束花，或一个早睡的夜晚。"},
-{zh:"皇帝", en:"The Emperor", rn:"IV", kw:["秩序","掌控","责任"], rkw:["固执","高压","失序"],
- up:"今天适合建立规则与结构：整理计划、明确目标、果断决策。稳固的根基会带来长久的安全感。",
- rev:"警惕过度控制——对他人，也对自己。今天试着松开紧握的手，留一点弹性给变化。",
- adv:"先定框架，再谈自由。"},
-{zh:"教皇", en:"The Hierophant", rn:"V", kw:["传承","指引","信念"], rkw:["教条","叛逆","形式主义"],
- up:"前人的经验里藏着捷径。今天适合向导师请教、学习体系化的知识，或在传统中寻找答案。",
- rev:"规则不是不能打破，但要想清楚为什么。今天用自己的判断代替盲从，也别为了叛逆而叛逆。",
- adv:"找一位值得信任的人，听听他的建议。"},
-{zh:"恋人", en:"The Lovers", rn:"VI", kw:["爱","连结","重要选择"], rkw:["犹豫不决","失衡","错过"],
- up:"心与心的连结在今天格外顺畅。适合表白、和解、深谈，也适合做出跟随内心的重要选择。",
- rev:"面对选择迟迟下不了决心？逆位恋人提醒你：拖延本身也是一种选择，而且往往是最差的那种。",
- adv:"选择你心里早已偏向的那个答案。"},
-{zh:"战车", en:"The Chariot", rn:"VII", kw:["胜利","意志","全速前进"], rkw:["失控","方向不明","内耗"],
- up:"胜利属于目标明确的人。今天动力十足，认准方向全力冲刺，阻碍会为你让路。",
- rev:"油门踩满却不知开向哪里？今天先停一停，确认方向，再重新出发。",
- adv:"目标写下来，然后只看路，不看观众。"},
-{zh:"力量", en:"Strength", rn:"VIII", kw:["勇气","温柔的坚定","耐心"], rkw:["自我怀疑","急躁","逞强"],
- up:"真正的力量是温柔而坚定的。今天面对难题不必硬碰硬，以柔克刚、以耐心驯服烦躁，你能赢。",
- rev:"感觉底气不足？其实你比自己以为的强大。今天从一件小事开始重建信心。",
- adv:"深呼吸，微笑，然后不动声色地搞定它。"},
-{zh:"隐士", en:"The Hermit", rn:"IX", kw:["独处","内省","智慧之光"], rkw:["孤立","逃避","过度封闭"],
- up:"喧嚣之外，自有答案。今天适合独处、复盘、深度思考，你的提灯会照亮下一段路。",
- rev:"独处是充电，不是逃避。如果你已经躲了太久，今天试着主动联系一位朋友。",
- adv:"关掉通知一小时，与自己开个会。"},
-{zh:"命运之轮", en:"Wheel of Fortune", rn:"X", kw:["转机","好运","顺势而为"], rkw:["时运不济","抗拒变化","循环"],
- up:"命运之轮正在转动，意外的好消息、巧合与机遇将至。顺势而为，抓住那个突然出现的机会。",
- rev:"低谷只是轮回的一段弧线。今天不必强求结果，把能控制的做好，等风向转变。",
- adv:"对突如其来的变化说一声「好」。"},
-{zh:"正义", en:"Justice", rn:"XI", kw:["公正","真相","因果"], rkw:["偏颇","失衡","逃避责任"],
- up:"种什么因，得什么果。今天适合处理合约、谈判、做需要公平判断的决定——事实站在诚实的人一边。",
- rev:"警惕自我合理化。今天诚实面对自己的责任，该道歉道歉，该纠正纠正，账要平。",
- adv:"做对的事，而不是容易的事。"},
-{zh:"倒吊人", en:"The Hanged Man", rn:"XII", kw:["换个角度","暂停","放手"], rkw:["无谓牺牲","僵持","拖延"],
- up:"卡住的时候，不妨倒过来看。今天的「停滞」其实是宇宙请你换个视角，答案会在放松时浮现。",
- rev:"你是否为不值得的事困住了自己？今天该止损就止损，放手不是失败，是腾出双手。",
- adv:"把问题讲给外行听，往往豁然开朗。"},
-{zh:"死神", en:"Death", rn:"XIII", kw:["结束与新生","蜕变","断舍离"], rkw:["抗拒改变","拖着不放","停滞"],
- up:"一段旧章节正在合上，为的是让新篇开启。今天勇敢告别过时的习惯、关系或想法，蜕变已在路上。",
- rev:"明知该结束却迟迟不放手，消耗的是你自己。今天做一次干脆的了断，轻装前行。",
- adv:"删掉、扔掉、告别掉——然后你会轻很多。"},
-{zh:"节制", en:"Temperance", rn:"XIV", kw:["平衡","调和","细水长流"], rkw:["失衡","极端","操之过急"],
- up:"今天的关键词是「刚刚好」。工作与休息、付出与索取、理性与感性，调和得当，诸事顺遂。",
- rev:"最近是否在某方面用力过猛？逆位节制提醒你回到中间地带，别让一件事吞掉全部生活。",
- adv:"慢慢来，比较快。"},
-{zh:"恶魔", en:"The Devil", rn:"XV", kw:["欲望","诱惑","直面阴影"], rkw:["挣脱束缚","觉醒","戒断"],
- up:"诱惑今天格外有魅力——熬夜、拖延、冲动消费或旧习复发。看见欲望，承认它，然后由你做主。",
- rev:"好消息：锁链正在松动。今天是戒掉坏习惯、离开消耗性关系的绝佳时机，你比想象中自由。",
- adv:"想要与需要之间，隔着一夜好眠。"},
-{zh:"高塔", en:"The Tower", rn:"XVI", kw:["突变","真相大白","破而后立"], rkw:["余震","侥幸","延迟的崩塌"],
- up:"突如其来的变动可能打乱计划——但塌掉的都是本就不稳的。别慌，废墟之上才能建起真正坚固的东西。",
- rev:"你可能一直在勉强维持某个摇摇欲坠的局面。与其等它塌，不如今天主动拆除重建。",
- adv:"接受计划外的剧情，它往往是更好的剧本。"},
-{zh:"星星", en:"The Star", rn:"XVII", kw:["希望","疗愈","心愿成真"], rkw:["信心不足","悲观","愿望延迟"],
- up:"风雨之后，星光如约而至。今天充满希望与疗愈的能量，适合许愿、修复关系、重拾梦想。",
- rev:"星光没有熄灭，只是被云遮住了。今天别急着否定自己，希望比你想的更近。",
- adv:"写下一个愿望，并为它做一件小事。"},
-{zh:"月亮", en:"The Moon", rn:"XVIII", kw:["直觉","梦境","朦胧不明"], rkw:["迷雾散去","真相浮现","安心"],
- up:"今天的信息真假难辨，情绪也易被放大。重要决定缓一缓，先让子弹飞一会儿；同时留意梦的提示。",
- rev:"困扰你的迷雾正在散去，误会将澄清，焦虑将平息。今天可以重新相信自己的判断。",
- adv:"夜里想不通的事，留给早晨。"},
-{zh:"太阳", en:"The Sun", rn:"XIX", kw:["喜悦","成功","光明正大"], rkw:["小小的延迟","低调的快乐","别骄傲"],
- up:"整副牌中最灿烂的一张！今天诸事顺遂，自信、活力与好消息同行，尽情发光，也把温暖分给别人。",
- rev:"阳光仍在，只是隔着一层薄云。成功可能稍稍迟到，但不会缺席，保持热情。",
- adv:"今天值得庆祝——哪怕只是小小的胜利。"},
-{zh:"审判", en:"Judgement", rn:"XX", kw:["觉醒","召唤","重获新生"], rkw:["自我审判","犹疑","错过召唤"],
- up:"内心有个声音在召唤你做出改变——这一次，回应它。过往的经验将化为重生的力量。",
- rev:"别再反复审判过去的自己。今天原谅那个走过弯路的你，然后向前看。",
- adv:"回应那个你搁置已久的「内心召唤」。"},
-{zh:"世界", en:"The World", rn:"XXI", kw:["圆满","达成","新的循环"], rkw:["差一步","未完成","眷恋过去"],
- up:"一个循环正圆满落幕：目标达成、旅程完成、努力开花结果。享受这份成就，新的世界已在门外。",
- rev:"距离圆满只差最后一步，别在终点前松劲。今天把那件99%的事推到100%。",
- adv:"完成，好过完美。"}
+{rn:"0",en:"The Fool",zh:"愚者",thE:"beginnings and the courage to leap",thZ:"开始与跃入未知的勇气",
+ kwU:["new beginnings","spontaneity","a leap of faith"],kwUz:["新的开始","率性而行","信念之跃"],
+ kwR:["recklessness","hesitation","false starts"],kwRz:["鲁莽","犹豫不前","虚假的开始"],
+ upE:"The Fool steps off the known path with a light pack and an open heart. Say yes to the untried thing today — beginnings favour you, and what looks like a cliff is often a doorstep.",
+ upZ:"愚者背着轻便的行囊踏出熟悉的路。今天适合对那件未曾尝试的事说「好」——开始眷顾你，看似悬崖之处往往是门阶。",
+ revE:"Reversed, the Fool warns of a leap made blind — or one endlessly postponed. Look before you jump today, but don't let looking become the excuse never to move.",
+ revZ:"逆位的愚者提醒：纵身一跃不可盲目，也不可无限期推迟。今天跳之前先看清楚，但别让「再看看」变成永远不动的借口。",
+ advE:"Start before you feel fully ready — just check your shoes first.",advZ:"在完全准备好之前就出发——只是先系好鞋带。"},
+{rn:"I",en:"The Magician",zh:"魔术师",thE:"focused will made real",thZ:"化意志为现实",
+ kwU:["willpower","skill","manifestation"],kwUz:["意志力","才能","心想事成"],
+ kwR:["scattered focus","untapped gifts","hesitation"],kwRz:["精力分散","才华未展","迟疑"],
+ upE:"Everything you need is already on the table: skill, words, tools, timing. Today favours launches, pitches and first moves — direct your will at one point and watch things align.",
+ upZ:"你所需要的一切已在桌上：技能、言辞、工具与时机。今天适合启动、提案与主动出击——把意志对准一处，事情自会排列成行。",
+ revE:"Reversed, the Magician scatters — many ideas, little landing. Choose one intention today and see it through; unfocused talent is only noise.",
+ revZ:"逆位的魔术师能量散乱——想法很多，落地很少。今天只选一个目标并把它做完；不聚焦的才华只是噪音。",
+ advE:"Pick one thing. Begin it. Finish it.",advZ:"选一件事。开始它。完成它。"},
+{rn:"II",en:"The High Priestess",zh:"女祭司",thE:"inner knowing",thZ:"内在的直觉",
+ kwU:["intuition","stillness","hidden knowledge"],kwUz:["直觉","静观","潜藏的智慧"],
+ kwR:["ignored instincts","restlessness","secrets"],kwRz:["忽视直觉","心浮气躁","秘而不宣"],
+ upE:"The answer you're chasing is not in more information but in stillness. Trust the quiet knowing beneath your reasoning today — it has already read the room.",
+ upZ:"你追寻的答案不在更多的信息里，而在安静之中。今天请相信理性之下那份沉静的知晓——它早已看清全局。",
+ revE:"Reversed, she suggests you've been talking over your own intuition. Step out of the noise, sit alone with the question, and honour the first honest answer you hear.",
+ revZ:"逆位的女祭司暗示你一直在用喧嚣盖过自己的直觉。今天离开噪音，独自与问题相处，尊重心里浮现的第一个诚实答案。",
+ advE:"Say less, sense more.",advZ:"少说，多感受。"},
+{rn:"III",en:"The Empress",zh:"女皇",thE:"nurture and abundance",thZ:"滋养与丰盛",
+ kwU:["abundance","nurture","beauty"],kwUz:["丰盛","滋养","美与爱"],
+ kwR:["overgiving","dependence","creative block"],kwRz:["过度付出","依赖","灵感枯竭"],
+ upE:"The Empress brings warmth, growth and plenty. Tend something today — a relationship, a project, yourself — and it will visibly flourish under your hands.",
+ upZ:"女皇带来温暖、生长与丰盛。今天去照料一样东西——一段关系、一个项目、或你自己——它会在你手中肉眼可见地繁茂起来。",
+ revE:"Reversed, she asks whether you've been pouring from an empty cup. Care for your own needs first today; real nourishment must include you.",
+ revZ:"逆位的女皇在问：你是否一直在用空了的杯子倒水？今天先照顾自己的需要；真正的滋养必须包括你自己。",
+ advE:"Buy the flowers. Cook the good meal. Sleep early.",advZ:"买那束花，做顿好饭，早点睡。"},
+{rn:"IV",en:"The Emperor",zh:"皇帝",thE:"order and steady ground",thZ:"秩序与根基",
+ kwU:["structure","authority","stability"],kwUz:["秩序","掌控","稳固"],
+ kwR:["rigidity","overcontrol","disorder"],kwRz:["僵化","控制过度","失序"],
+ upE:"Structure is your ally today. Set the plan, define the boundary, make the firm call — steady foundations laid now buy you freedom later.",
+ upZ:"今天，秩序是你的盟友。定好计划、划清边界、果断拍板——此刻打下的稳固地基，会换来日后的自由。",
+ revE:"Reversed, the Emperor grips too hard. Loosen control where it isn't needed, and be wary of rigid rules today — your own included.",
+ revZ:"逆位的皇帝握得太紧。今天在不必要的地方松开手，警惕僵硬的规则——包括你给自己定的那些。",
+ advE:"Build the frame, then live inside it lightly.",advZ:"先立框架，再在其中轻盈地生活。"},
+{rn:"V",en:"The Hierophant",zh:"教皇",thE:"guidance and tradition",thZ:"传承与指引",
+ kwU:["tradition","mentorship","shared belief"],kwUz:["传承","导师","信念"],
+ kwR:["dogma","rebellion","empty ritual"],kwRz:["教条","为反而反","形式主义"],
+ upE:"Lasting wisdom is usually inherited. Ask the mentor, read the manual, follow the proven path today — tradition is holding a shortcut for you.",
+ upZ:"经得起时间的智慧多半是传下来的。今天去请教前辈、读读正典、走一走被验证过的路——传统正为你藏着一条捷径。",
+ revE:"Reversed, the Hierophant invites you to question the rulebook. Follow your own considered judgement today — but rebel for a reason, not for the pose.",
+ revZ:"逆位的教皇请你质疑规则本身。今天可以依自己深思后的判断行事——但叛逆要有理由，而不是为了姿态。",
+ advE:"Call the person who has walked this road before.",advZ:"联系那位走过这条路的人，听听他的建议。"},
+{rn:"VI",en:"The Lovers",zh:"恋人",thE:"connection and true choice",thZ:"连结与真心的选择",
+ kwU:["love","alignment","a heartfelt choice"],kwUz:["爱","心意相通","重要选择"],
+ kwR:["indecision","imbalance","disharmony"],kwRz:["犹豫不决","失衡","心口不一"],
+ upE:"Hearts speak clearly today. It favours honest conversations, reconciliation, and decisions made from your values — choose what you actually love.",
+ upZ:"今天，心与心的对话格外通畅。适合坦诚交流、和解，也适合依照自己的价值观做决定——选择你真正所爱的。",
+ revE:"Reversed, the Lovers point at a choice you keep deferring. Remember: not choosing is also a choice — usually the worst one on the table.",
+ revZ:"逆位的恋人指向那个你一再推迟的选择。请记得：不选择也是一种选择——而且往往是桌上最差的那个。",
+ advE:"Choose the answer your heart drafted long ago.",advZ:"选择你心里早已写好的那个答案。"},
+{rn:"VII",en:"The Chariot",zh:"战车",thE:"will and victory",thZ:"意志与胜利",
+ kwU:["victory","drive","clear direction"],kwUz:["胜利","冲劲","方向明确"],
+ kwR:["drifting","burnout","lost reins"],kwRz:["漂移失向","内耗","缰绳脱手"],
+ upE:"Momentum is with you. Fix your destination, take the reins, and drive — obstacles tend to yield to a clear direction today.",
+ upZ:"势头正站在你这边。定好目的地，握紧缰绳，全力前进——今天，清晰的方向所到之处，阻碍多会让路。",
+ revE:"Reversed, the Chariot spins its wheels: full throttle, no map. Stop, name where you're actually going, then move again.",
+ revZ:"逆位的战车在原地空转：油门踩满，却没有地图。先停下来，说清自己究竟要去哪里，再重新出发。",
+ advE:"Write the goal down; watch the road, not the crowd.",advZ:"把目标写下来；看路，不看观众。"},
+{rn:"VIII",en:"Strength",zh:"力量",thE:"gentle courage",thZ:"温柔而坚定的勇气",
+ kwU:["courage","patience","gentle power"],kwUz:["勇气","耐心","以柔克刚"],
+ kwR:["self-doubt","impatience","forcing it"],kwRz:["自我怀疑","急躁","硬碰硬"],
+ upE:"Real strength today is soft-handed: patience, warmth, nerve held quietly. Tame the difficulty rather than wrestling it, and you will win.",
+ upZ:"今天真正的力量是柔软的：耐心、温暖、沉住气。驯服难题，而不是与它角力，你会赢。",
+ revE:"Reversed, Strength shows self-doubt roaring louder than any lion. You are more capable than today's inner critic claims — prove it with one small brave act.",
+ revZ:"逆位的力量显示：自我怀疑的吼声比狮子还大。你远比今天心里那个批评者所说的更有能力——用一件小小的勇敢之事证明给自己看。",
+ advE:"Breathe, smile, and handle it without raising your voice.",advZ:"深呼吸，微笑，然后不动声色地把它解决。"},
+{rn:"IX",en:"The Hermit",zh:"隐士",thE:"the inward light",thZ:"内省之光",
+ kwU:["solitude","insight","inner light"],kwUz:["独处","洞见","心中明灯"],
+ kwR:["isolation","avoidance","withdrawal"],kwRz:["自我隔绝","逃避","过度封闭"],
+ upE:"Step back from the noise. One hour of honest solitude today will show you what a week of busy motion cannot.",
+ upZ:"从喧嚣中退后一步。今天一小时诚实的独处，能让你看清忙碌一周都看不清的东西。",
+ revE:"Reversed, the Hermit has stayed in the cave too long. Solitude was rest; now it is hiding. Reach out to one person today.",
+ revZ:"逆位的隐士在洞里待得太久了。独处本是休息，如今成了躲藏。今天主动联系一个人吧。",
+ advE:"One hour, notifications off — a meeting with yourself.",advZ:"关掉通知一小时，与自己开一场会。"},
+{rn:"X",en:"Wheel of Fortune",zh:"命运之轮",thE:"turning fortune",thZ:"流转的机运",
+ kwU:["luck","turning point","good timing"],kwUz:["好运","转机","顺势而为"],
+ kwR:["bad timing","resistance","loops"],kwRz:["时运不济","抗拒变化","循环往复"],
+ upE:"The Wheel turns your way — chance meetings, sudden openings, uncanny timing. Don't cling to the plan; ride the turn while it's moving.",
+ upZ:"命运之轮正转向你——不期而遇、忽然出现的机会、恰到好处的时机。别死守原计划；趁轮子在转，顺势而上。",
+ revE:"Reversed, the Wheel drags: a low arc of the cycle, not a final verdict. Do what is yours to do, and let the season change on its own schedule.",
+ revZ:"逆位的轮子转得沉：这只是周期里的低谷弧线，不是最终判决。把你能做的做好，让季节按它自己的时刻表更替。",
+ advE:"Say yes to the unexpected door.",advZ:"对突然打开的那扇门说「好」。"},
+{rn:"XI",en:"Justice",zh:"正义",thE:"truth and balance",thZ:"真相与平衡",
+ kwU:["fairness","truth","accountability"],kwUz:["公正","真相","因果分明"],
+ kwR:["bias","imbalance","avoidance"],kwRz:["偏颇","失衡","逃避责任"],
+ upE:"Cause meets effect today. Contracts, verdicts, difficult fairness — the plain truth is your strongest position, so stand on it.",
+ upZ:"今天，因与果相遇。合约、裁断、艰难的公平——朴素的真相就是你最有力的立场，站稳它。",
+ revE:"Reversed, Justice warns of a thumb on your own scale. Own your part honestly today; balance restored late always costs double.",
+ revZ:"逆位的正义提醒你：秤上可能压着自己的手指。今天诚实认领属于你的那部分责任；迟来的平衡，代价总是加倍。",
+ advE:"Do the right thing, not the easy one.",advZ:"做对的事，而不是容易的事。"},
+{rn:"XII",en:"The Hanged Man",zh:"倒吊人",thE:"surrender and new angles",thZ:"换位与放手",
+ kwU:["new perspective","pause","letting go"],kwUz:["换个角度","暂停","放手"],
+ kwR:["stalling","futile sacrifice","martyrdom"],kwRz:["拖延僵持","无谓牺牲","自我感动"],
+ upE:"The delay is the lesson. Hang loose today, turn the question upside down, and the stuck thing will show you its hidden hinge.",
+ upZ:"停滞本身就是功课。今天松开执念，把问题倒过来看，卡住的事情会向你露出隐藏的转轴。",
+ revE:"Reversed, you're sacrificing for something that stopped deserving it. Cut the loss and take your hands back.",
+ revZ:"逆位的倒吊人说：你正在为一件不再值得的事付出。及时止损，把双手收回来。",
+ advE:"Explain the problem to an outsider — and hear yourself solve it.",advZ:"把问题讲给一个外行听——你会听见自己说出答案。"},
+{rn:"XIII",en:"Death",zh:"死神",thE:"endings that set you free",thZ:"结束与新生",
+ kwU:["transformation","endings","renewal"],kwUz:["蜕变","告一段落","新生"],
+ kwR:["clinging","stagnation","the slow goodbye"],kwRz:["不肯放手","停滞","拖长的告别"],
+ upE:"A chapter is closing so a truer one can open. Let the outworn habit, role or story go today — the transformation is already in motion.",
+ upZ:"一个章节正在合上，是为了让更真实的一章打开。今天送别那个过时的习惯、角色或故事——蜕变其实已经在路上。",
+ revE:"Reversed, Death lingers at a door you won't shut. The slow goodbye is costing more than a clean one would. End it kindly — today.",
+ revZ:"逆位的死神徘徊在你不肯关上的门前。拖长的告别，比干脆的告别代价更大。今天，温和而果断地了结它。",
+ advE:"Delete it, return it, say goodbye — travel lighter.",advZ:"删掉它、归还它、道个别——轻装上路。"},
+{rn:"XIV",en:"Temperance",zh:"节制",thE:"balance and patient blending",thZ:"调和与平衡",
+ kwU:["balance","moderation","patience"],kwUz:["平衡","适度","细水长流"],
+ kwR:["excess","extremes","haste"],kwRz:["过度","走极端","操之过急"],
+ upE:"Today's magic word is 'blend'. Work and rest, logic and feeling, yours and theirs — mixed patiently, everything flows.",
+ upZ:"今天的关键词是「调和」。工作与休息、理性与感性、你的与他人的——耐心兑在一起，万事顺流。",
+ revE:"Reversed, something has tipped into excess. Come back toward the middle today, before the middle has to come for you.",
+ revZ:"逆位的节制说明某处已经过量。今天主动回到中间地带——别等失衡来强行纠正你。",
+ advE:"Slower is faster today.",advZ:"今天，慢慢来反而比较快。"},
+{rn:"XV",en:"The Devil",zh:"恶魔",thE:"shadow and liberation",thZ:"欲望与解脱",
+ kwU:["desire","attachment","facing the shadow"],kwUz:["欲望","执念","直面阴影"],
+ kwR:["release","awakening","breaking chains"],kwRz:["挣脱","觉醒","锁链松动"],
+ upE:"Temptation dresses well today — the doomscroll, the splurge, the old bad habit. See the chain clearly, then choose with open eyes; the key has been in your hand all along.",
+ upZ:"今天的诱惑格外体面——无止境的刷屏、冲动消费、旧习复发。先看清那条锁链，再睁着眼睛做选择；钥匙其实一直在你手里。",
+ revE:"Reversed is good news: the chain is already loosening. This is the day to quit the habit, leave the drain, unhook the claw. You are freer than you think.",
+ revZ:"逆位是个好消息：锁链已经在松动。今天正适合戒掉恶习、离开消耗你的人与事。你比自己以为的自由得多。",
+ advE:"Between want and need stands one good night's sleep.",advZ:"「想要」与「需要」之间，隔着一夜好眠。"},
+{rn:"XVI",en:"The Tower",zh:"高塔",thE:"sudden clearing truth",thZ:"破而后立",
+ kwU:["upheaval","revelation","breakthrough"],kwUz:["剧变","真相大白","破局"],
+ kwR:["aftershocks","a needed demolition","narrow escape"],kwRz:["余震","该拆的迟早要拆","侥幸脱险"],
+ upE:"Something unstable may crack today — a plan, an assumption. Let it. Only the false floors fall, and the ground underneath them is real.",
+ upZ:"今天，某个不稳的东西可能会裂开——一个计划、一个假设。让它裂。塌掉的都是假地板，底下的地面才是真的。",
+ revE:"Reversed, you're propping up what wants to collapse. A controlled demolition beats waiting for the storm — take it down on your own terms.",
+ revZ:"逆位的高塔说明你在勉强支撑一个摇摇欲坠的局面。主动、可控地拆除，好过等风暴来拆——按你自己的节奏来。",
+ advE:"The plot twist is a better script — read it.",advZ:"计划外的剧情往往是更好的剧本——读下去。"},
+{rn:"XVII",en:"The Star",zh:"星星",thE:"hope and healing",thZ:"希望与疗愈",
+ kwU:["hope","healing","quiet renewal"],kwUz:["希望","疗愈","静静复原"],
+ kwR:["dimmed faith","doubt","delayed wishes"],kwRz:["信心黯淡","怀疑","愿望迟到"],
+ upE:"After the storm, the sky remembers you. Hope, healing and gentle renewal flow today — make the wish, mend the bridge, water the dream.",
+ upZ:"风雨之后，天空记得你。今天流淌着希望与疗愈的能量——许下心愿、修复关系、为梦想浇一次水。",
+ revE:"Reversed, the stars are only clouded, not gone. Refuse the small voice that says 'never'. Hope is closer than today's evidence suggests.",
+ revZ:"逆位的星星只是被云遮住，并没有熄灭。别听那个说「不可能了」的小声音。希望比今天所见的证据更近。",
+ advE:"Write one wish down, and do one small thing for it.",advZ:"写下一个愿望，并为它做一件小事。"},
+{rn:"XVIII",en:"The Moon",zh:"月亮",thE:"dreams and uncertainty",thZ:"梦境与朦胧",
+ kwU:["intuition","dreams","uncertainty"],kwUz:["直觉","梦境","真假难辨"],
+ kwR:["fog lifting","clarity returning","relief"],kwRz:["迷雾散去","恢复清明","安心"],
+ upE:"Not everything today is as lit as it looks. Feelings amplify and facts blur — postpone the big verdict, note your dreams, and let the tide finish moving.",
+ upZ:"今天所见未必如表面明亮。情绪易被放大，事实容易失焦——重大结论先缓一缓，留意梦的提示，让潮水走完它的路。",
+ revE:"Reversed, the fog is lifting. A confusion clarifies, an anxiety shrinks in daylight. You can trust your own eyes again.",
+ revZ:"逆位的月亮意味着迷雾正在散去。误会将澄清，焦虑在日光下缩小。你可以重新相信自己的眼睛了。",
+ advE:"What midnight cannot solve, morning will.",advZ:"午夜想不通的事，交给清晨。"},
+{rn:"XIX",en:"The Sun",zh:"太阳",thE:"joy and clear light",thZ:"喜悦与光明",
+ kwU:["joy","success","vitality"],kwUz:["喜悦","成功","生命力"],
+ kwR:["a delayed win","quiet joy","thin clouds"],kwRz:["迟到的胜利","低调的快乐","薄云蔽日"],
+ upE:"The brightest card in the deck rises for you. Confidence, vitality and good news travel together today — shine without apology, and share the warmth.",
+ upZ:"整副牌中最明亮的一张为你升起。今天自信、活力与好消息同行——大大方方地发光，也把温暖分给别人。",
+ revE:"Reversed, the sun sits behind thin cloud. The win arrives slightly late but it arrives — keep your face toward the light.",
+ revZ:"逆位的太阳只是隔着薄云。胜利会稍稍迟到，但不会缺席——继续朝着光的方向。",
+ advE:"Celebrate something today, however small.",advZ:"今天庆祝一件事，再小也值得。"},
+{rn:"XX",en:"Judgement",zh:"审判",thE:"awakening and second birth",thZ:"觉醒与重生",
+ kwU:["awakening","a calling","rebirth"],kwUz:["觉醒","内心召唤","重获新生"],
+ kwR:["self-judgement","doubt","the unanswered call"],kwRz:["自我审判","犹疑","搁置的召唤"],
+ upE:"Something in you is being called to rise — the decision you've postponed, the self you've outgrown. Answer the call today; the past turns into fuel.",
+ upZ:"你内在有个声音正召唤你起身——那个被推迟的决定、那个早已长大的自己。今天回应它；过往会化作燃料。",
+ revE:"Reversed, you keep retrying yourself in an inner courtroom. Pardon the person you were, close the case, and walk forward.",
+ revZ:"逆位的审判显示你还在内心的法庭上反复审讯自己。赦免曾经的你，结案，向前走。",
+ advE:"Answer the call you've kept on hold.",advZ:"回应那个被你搁置已久的召唤。"},
+{rn:"XXI",en:"The World",zh:"世界",thE:"completion and wholeness",thZ:"圆满与完成",
+ kwU:["completion","achievement","integration"],kwUz:["圆满","达成","融会贯通"],
+ kwR:["loose ends","almost there","needing closure"],kwRz:["收尾未完","只差一步","需要一个了结"],
+ upE:"A circle completes: the goal lands, the journey rounds home. Take the bow — and notice the new door already opening behind you.",
+ upZ:"一个循环正在圆满：目标落地，旅程归航。接受这份成就的致意——同时留意，新的门已在身后打开。",
+ revE:"Reversed, you are one step short of done. Don't slacken at the finish line — push the ninety-nine percent to one hundred today.",
+ revZ:"逆位的世界说明你离完成只差一步。别在终点线前松劲——今天就把那件99%的事推到100%。",
+ advE:"Done is better than perfect.",advZ:"完成，胜过完美。"}
 ];
+
+/* ============================================================
+   i18n — English is the primary language
+   ============================================================ */
+const I18N = {
+en:{
+  main:"DAILY TAROT", sub:"每日塔罗",
+  tag:"Quiet your mind — let today's card light the way",
+  sp1:"Card of the Day", sp1d:"draw one card · 今日指引",
+  sp3:"Arc of Time", sp3d:"past · present · future",
+  q:"Focus on a question… (optional)",
+  start:"Begin the Ritual",
+  chip:"✦ Today's guidance awaits — revisit it ✦",
+  hShuffle:"Shuffle — pour today's thoughts into the deck", hShuffleS:"hold your question quietly in mind",
+  hMore:"Shuffle as many times as feels right", hMoreS:"then cut the deck on instinct",
+  hCut:"Tap one pile, on instinct", hCutS:"it will lead your fate",
+  hSet:"The cards are set",
+  hPick1:"Breathe — choose the one card that calls to you", hPick1S:"follow your intuition",
+  hPick3:"Choose three cards, one by one", hPick3S:"first the past · then the present · last the future",
+  hFlip:"Tap a card to reveal it",
+  bShuffle:"S H U F F L E", bCut:"C U T", bSkip:"skip to the spread",
+  tFirst:"Shuffle at least once ✦",
+  slot1:"YOUR CARD · 今日之牌",
+  pos:["PAST · 过去","PRESENT · 现在","FUTURE · 未来"], posN:["The past","The present","The future"],
+  up:"Upright", rev:"Reversed",
+  oracle:"ORACLE'S WHISPER", oAI:"✨ on-device AI", oClassic:"✦ house oracle", oWait:"The oracle is contemplating…",
+  yourQ:"Your question",
+  copy:"Copy Reading", again:"New Reading",
+  copied:"Reading copied ✦", copyFail:"Copy failed — take a screenshot",
+  piles:["I","II","III"],
+},
+zh:{
+  main:"每日塔罗", sub:"DAILY TAROT",
+  tag:"静心凝神 · 让命运之牌为今日引路",
+  sp1:"今日指引", sp1d:"抽取一张 · card of the day",
+  sp3:"时之牌阵", sp3d:"过去 · 现在 · 未来",
+  q:"默想一个问题…（可留空）",
+  start:"开启占卜",
+  chip:"✦ 今日已留下指引，点此回顾 ✦",
+  hShuffle:"洗牌，把今日的心绪注入牌中", hShuffleS:"心中默念想问之事",
+  hMore:"可以多洗几次，直到心里踏实", hMoreS:"然后凭直觉切牌",
+  hCut:"凭直觉，轻点其中一叠", hCutS:"它将成为命运的开端",
+  hSet:"命运已然就位",
+  hPick1:"深呼吸，选出在呼唤你的那张牌", hPick1S:"跟随你的直觉",
+  hPick3:"静心默想，依次选出三张牌", hPick3S:"第一张为过去 · 第二张为现在 · 第三张为未来",
+  hFlip:"轻触卡牌，揭示指引",
+  bShuffle:"洗 牌", bCut:"切 牌", bSkip:"直接展牌",
+  tFirst:"先洗一次牌吧 ✦",
+  slot1:"今日之牌 · YOUR CARD",
+  pos:["过去 · PAST","现在 · PRESENT","未来 · FUTURE"], posN:["过去","现在","未来"],
+  up:"正位", rev:"逆位",
+  oracle:"神谕低语", oAI:"✨ 本地 AI", oClassic:"✦ 经典签文", oWait:"神谕正在凝思…",
+  yourQ:"你的问题",
+  copy:"复制签文", again:"重新占卜",
+  copied:"签文已复制 ✦", copyFail:"复制失败，请截图保存",
+  piles:["壹","贰","叁"],
+}};
+const L = () => I18N[state.lang];
+const N = c => state.lang==='en' ? c.en : c.zh;
+const KW = (c,rev) => state.lang==='en' ? (rev?c.kwR:c.kwU) : (rev?c.kwRz:c.kwUz);
+const MEAN = (c,rev) => state.lang==='en' ? (rev?c.revE:c.upE) : (rev?c.revZ:c.upZ);
+const ADV = c => state.lang==='en' ? c.advE : c.advZ;
+const TH = c => state.lang==='en' ? c.thE : c.thZ;
 
 /* ============================================================
    Ambient sky: stars + drifting gold dust
@@ -599,8 +787,8 @@ const CARDS = [
     if (document.hidden) return;
     cx.clearRect(0,0,W,H);
     for (const s of stars){
-      const a = .25 + .75 * Math.abs(Math.sin(t*.0004*s.s + s.p));
-      cx.globalAlpha = a; cx.fillStyle = '#e8ddff';
+      cx.globalAlpha = .25 + .75 * Math.abs(Math.sin(t*.0004*s.s + s.p));
+      cx.fillStyle = '#e8ddff';
       cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 7); cx.fill();
     }
     for (const d of dust){
@@ -615,7 +803,7 @@ const CARDS = [
 })();
 
 /* ============================================================
-   Sound engine (tiny, synthesized — no audio files)
+   Sound engine (synthesized — no audio files)
    ============================================================ */
 const Snd = (() => {
   let ctx = null, muted = localStorage.getItem('tarot-muted') === '1';
@@ -632,10 +820,10 @@ const Snd = (() => {
     const g = c.createGain(); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.0001, t+dur);
     src.connect(bp).connect(g).connect(c.destination); src.start(t);
   }
-  function tone(when, freq, gain, dur, type='sine'){
+  function tone(when, freq, gain, dur){
     const c = ac(); if (!c || muted) return;
     const t = c.currentTime + when;
-    const o = c.createOscillator(); o.type = type; o.frequency.value = freq;
+    const o = c.createOscillator(); o.type = 'sine'; o.frequency.value = freq;
     const g = c.createGain();
     g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t+.02);
     g.gain.exponentialRampToValueAtTime(.0001, t+dur);
@@ -655,6 +843,191 @@ const Snd = (() => {
 const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
 
 /* ============================================================
+   Oracle — embedded on-device AI (Chrome Prompt API / Gemini
+   Nano) with a hand-crafted composition engine as fallback
+   ============================================================ */
+const Oracle = {
+  lm(){ return globalThis.LanguageModel || (globalThis.ai && globalThis.ai.languageModel) || null; },
+
+  async session(sys){
+    const LM = this.lm(); if (!LM) return null;
+    try{
+      let avail = 'available';
+      if (typeof LM.availability === 'function') avail = await LM.availability();
+      else if (typeof LM.capabilities === 'function') avail = (await LM.capabilities()).available;
+      if (avail === 'unavailable' || avail === 'no') return null;
+      if (avail !== 'available' && avail !== 'readily'){
+        // model is downloadable — warm it in the background for next time
+        try{ LM.create({}).catch(()=>{}); }catch(e){}
+        return null;
+      }
+      try{ return await LM.create({ initialPrompts:[{ role:'system', content:sys }] }); }
+      catch(e){ return await LM.create({ systemPrompt: sys }); }
+    }catch(e){ return null; }
+  },
+
+  buildPrompt(picks, question, lang){
+    const posE = ['the past','the present','the future'];
+    const posZ = ['过去','现在','未来'];
+    const list = picks.map((p,k) => {
+      const c = CARDS[p.i];
+      const ori = lang==='en' ? (p.rev?'reversed':'upright') : (p.rev?'逆位':'正位');
+      const pos = picks.length>1 ? (lang==='en' ? ` (position: ${posE[k]})` : `（位置：${posZ[k]}）`) : '';
+      return lang==='en' ? `${k+1}) ${c.en}, ${ori}${pos}` : `${k+1}）${c.zh}（${c.en}），${ori}${pos}`;
+    }).join(lang==='en' ? '; ' : '；');
+    const d = new Date();
+    if (lang === 'en'){
+      return `Today is ${d.toDateString()}. ` +
+        (question ? `The querent asks: "${question}". ` : `The querent asks for general guidance for the day. `) +
+        (picks.length>1 ? `Spread: past / present / future. ` : `Spread: a single card of the day. `) +
+        `Cards drawn: ${list}. Weave the cards into one cohesive, personal reading for today.`;
+    }
+    return `今天是${d.getFullYear()}年${d.getMonth()+1}月${d.getDate()}日。` +
+      (question ? `求问者的问题是：「${question}」。` : `求问者想获得今日的整体指引。`) +
+      (picks.length>1 ? `牌阵：过去/现在/未来。` : `牌阵：单张今日牌。`) +
+      `抽到的牌：${list}。请把这些牌编织成一段连贯而贴近求问者的今日解读。`;
+  },
+
+  sys(lang){
+    return lang==='en'
+      ? "You are a warm, perceptive tarot reader. Interpret the querent's cards for today using traditional Rider-Waite meanings, adjusted for reversals and positions. Be specific, encouraging but honest, and end with one concrete piece of advice. Write 90-130 words of flowing prose. No lists, no headings, no disclaimers."
+      : "你是一位温暖而敏锐的塔罗解读师。请依照传统韦特塔罗的含义，结合正逆位与牌阵位置，为求问者解读今日的牌。语言具体、真诚、鼓励而不虚浮，结尾给出一条切实可行的建议。以100-150字的流畅中文散文作答，不要列表、标题或免责声明。"
+  },
+
+  /* ---- fallback composition engine ---- */
+  domain(q){
+    if (!q) return 'general';
+    const s = q.toLowerCase();
+    const rules = {
+      love:   [/love|relationship|partner|crush|marriage|boyfriend|girlfriend|date|romance|\bex\b/, /感情|恋爱|爱情|喜欢|暗恋|男友|女友|婚|分手|复合|对象|脱单/],
+      career: [/work|job|career|boss|interview|project|promotion|business|startup|client|team/, /工作|事业|职|老板|面试|项目|升职|创业|生意|同事|跳槽/],
+      money:  [/money|invest|debt|salary|financ|rent|afford|saving/, /钱|财|投资|工资|债|房|存款|理财/],
+      health: [/health|sick|sleep|body|energy|diet|anxiety|stress|tired/, /健康|身体|睡眠|生病|锻炼|减肥|焦虑|压力|累/],
+      study:  [/study|exam|school|learn|test|degree|thesis|course/, /学习|考试|学校|考研|论文|留学|课程/],
+      choice: [/should i|choose|decide|whether|which one|or not/, /该不该|选择|要不要|决定|还是|纠结/]
+    };
+    for (const k in rules) if (rules[k][0].test(s) || rules[k][1].test(q)) return k;
+    return 'general';
+  },
+
+  greet(lang){
+    const h = new Date().getHours();
+    const idx = h < 11 ? 0 : h < 17 ? 1 : h < 22 ? 2 : 3;
+    return lang==='en'
+      ? ['Morning light falls kindly on the cards.','The afternoon holds its breath around your question.','Evening gathers, and the cards lean closer.','In the deep of night, the deck speaks plainly.'][idx]
+      : ['晨光温柔地落在牌面上。','午后的空气围着你的问题屏住了呼吸。','暮色四合，牌向你俯身靠近。','夜深了，牌的声音格外清晰。'][idx];
+  },
+
+  domainLine(dom, c, rev, lang){
+    const kw = (lang==='en' ? (rev?c.kwR:c.kwU) : (rev?c.kwRz:c.kwUz))[0];
+    if (lang==='en'){
+      const up = {
+        love:`In matters of the heart this is a green light: let ${kw} lead, and honesty offered today returns doubled.`,
+        career:`At work, read it as ${kw} — lean into it and make the visible move you've been sitting on.`,
+        money:`Where money is concerned it counsels ${kw}: act deliberately and keep the long game in view.`,
+        health:`For your body and spirit it points to ${kw} — gentle consistency will do more than any grand gesture.`,
+        study:`In your studies it signals ${kw}: the effort you invest today compounds quietly.`,
+        choice:`For the decision you're weighing, it tilts the scale toward ${kw} — trust the option that felt right first.`,
+        general:`Let ${kw} set the tempo of your day; the current is already moving your way.`
+      };
+      const rv = {
+        love:`In matters of the heart, watch for ${kw} — name it gently before it grows teeth.`,
+        career:`At work it cautions against ${kw}: slow down, double-check the ground, then proceed.`,
+        money:`Around money it warns of ${kw} — postpone the impulsive move and recount the numbers.`,
+        health:`For your wellbeing it flags ${kw}: rest is a strategy today, not a retreat.`,
+        study:`In your studies it hints at ${kw} — shrink the task until it starts moving again.`,
+        choice:`For your decision it exposes ${kw}: the delay itself is telling you which way you already lean.`,
+        general:`Its inverted light asks you to slow where you'd usually rush — the lesson of ${kw} only lands if you let it.`
+      };
+      return (rev?rv:up)[dom];
+    }
+    const up = {
+      love:`在感情上，这是一盏绿灯：让「${kw}」引路，今天付出的坦诚会加倍回到你身上。`,
+      career:`在工作上，它读作「${kw}」——顺着这股劲，把你搁置已久的那步走出去。`,
+      money:`在财务上，它建议「${kw}」：从容行事，眼光放远。`,
+      health:`在身心上，它指向「${kw}」——温和的坚持胜过任何轰轰烈烈。`,
+      study:`在学业上，它预示「${kw}」：今天投入的功夫会安静地复利。`,
+      choice:`对你正在权衡的选择，它把天平拨向「${kw}」——相信最初觉得对的那个选项。`,
+      general:`让「${kw}」定下今天的节奏；水流已经开始向着你的方向。`
+    };
+    const rv = {
+      love:`在感情上，请留意「${kw}」——趁它还温和时轻轻说破。`,
+      career:`在工作上，它提醒你警惕「${kw}」：放慢一点，看清脚下，再继续。`,
+      money:`在财务上，它警示「${kw}」——冲动的动作先缓一缓，把数字再算一遍。`,
+      health:`在身心上，它点出「${kw}」：今天，休息是一种策略，不是退却。`,
+      study:`在学业上，它暗示「${kw}」——把任务切小，直到它重新动起来。`,
+      choice:`对你的抉择，它照出了「${kw}」：迟迟不决本身，已经说明你心里偏向哪边。`,
+      general:`它以倒转之光请你在惯常疾行处放慢——「${kw}」的功课，慢下来才接得住。`
+    };
+    return (rev?rv:up)[dom];
+  },
+
+  compose(picks, question, lang){
+    const dom = this.domain(question);
+    const g = this.greet(lang);
+    if (picks.length === 1){
+      const p = picks[0], c = CARDSS(p.i);
+      if (lang==='en'){
+        const ori = p.rev ? 'reversed' : 'upright';
+        return `${g} From twenty-two doors, ${c.en} stepped through ${ori} — a card of ${c.thE}. ` +
+          `${this.domainLine(dom, c, p.rev, 'en')} ` +
+          `Carry this as today's counsel: ${lc(c.advE)}`;
+      }
+      return `${g}在二十二扇门中，走出的是${p.rev?'逆位':'正位'}的「${c.zh}」——一张关于${c.thZ}的牌。` +
+        `${this.domainLine(dom, c, p.rev, 'zh')}` +
+        `今日签语：${c.advZ}`;
+    }
+    const [a,b,f] = picks.map(p => CARDSS(p.i));
+    const kw = (p,c) => (lang==='en' ? (p.rev?c.kwR:c.kwU) : (p.rev?c.kwRz:c.kwUz))[0];
+    if (lang==='en'){
+      const o = p => p.rev ? 'reversed' : 'upright';
+      return `${g} Your reading arcs from ${a.thE}, through ${b.thE}, toward ${f.thE}. ` +
+        `Behind you lies ${a.en} ${o(picks[0])}: ${kw(picks[0],a)} shaped the road that brought you here. ` +
+        `At the centre stands ${b.en} ${o(picks[1])} — the present asks you to meet ${kw(picks[1],b)} with open eyes. ` +
+        `Ahead waits ${f.en} ${o(picks[2])}: hold this course and the story bends toward ${kw(picks[2],f)}. ` +
+        `${this.domainLine(dom, b, picks[1].rev, 'en')} ` +
+        `Carry this as today's counsel: ${lc(b.advE)}`;
+    }
+    const oz = p => p.rev ? '逆位' : '正位';
+    return `${g}你的牌面从${a.thZ}，经由${b.thZ}，走向${f.thZ}。` +
+      `身后是${oz(picks[0])}的「${a.zh}」：「${kw(picks[0],a)}」塑造了你走到今天的路。` +
+      `正中立着${oz(picks[1])}的「${b.zh}」——当下请你睁着眼睛面对「${kw(picks[1],b)}」。` +
+      `前方等着${oz(picks[2])}的「${f.zh}」：守住这个方向，故事会转向「${kw(picks[2],f)}」。` +
+      `${this.domainLine(dom, b, picks[1].rev, 'zh')}` +
+      `今日签语：${b.advZ}`;
+  },
+
+  /* generate a reading; onChunk receives progressive text */
+  async generate(picks, question, lang, onChunk){
+    const attempt = (async () => {
+      const s = await this.session(this.sys(lang));
+      if (!s) return null;
+      try{
+        const p = this.buildPrompt(picks, question, lang);
+        let out = '';
+        if (s.promptStreaming){
+          for await (const c of s.promptStreaming(p)){
+            out = c.startsWith(out) ? c : out + c;   // cumulative or delta chunks
+            onChunk && onChunk(out);
+          }
+        } else {
+          out = await s.prompt(p);
+        }
+        s.destroy && s.destroy();
+        out = (out || '').trim();
+        return out.length > 20 ? { text: out, ai: true } : null;
+      }catch(e){ try{ s.destroy && s.destroy(); }catch(_){} return null; }
+    })();
+    const timeout = new Promise(res => setTimeout(() => res(null), 20000));
+    const res = await Promise.race([attempt, timeout]);
+    if (res) return res;
+    return { text: this.compose(picks, question, lang), ai: false };
+  }
+};
+function CARDSS(i){ return CARDS[i]; }
+function lc(s){ return s.charAt(0).toLowerCase() + s.slice(1); }
+
+/* ============================================================
    Tarot table
    ============================================================ */
 const $ = s => document.querySelector(s);
@@ -662,16 +1035,18 @@ const stage = $('#stage'), hintEl = $('#hint'), actionsEl = $('#actions'),
       sheet = $('#sheet'), sheetBody = $('#sheet-body'), pickCountEl = $('#pick-count');
 
 const state = {
+  lang: localStorage.getItem('tarot-lang') || 'en',
   phase: 'welcome',        // welcome | deck | cut | fan | reveal
   spreadN: 1,
+  question: '',
   order: [],               // card indices, deck order (0 = top)
   els: [],                 // card elements by card index
   picks: [],               // [{i, rev}]
   flipped: 0,
   shuffles: 0,
-  jitter: [],              // per-card resting jitter in the stack
+  jitter: [],
+  oracleRun: 0,            // token to cancel stale oracle streams
 };
-const POS3 = ['过去 · PAST','现在 · PRESENT','未来 · FUTURE'];
 const todayKey = () => { const d = new Date(); return `tarot-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
 
 function setHint(main, sub=''){ hintEl.innerHTML = main ? `${main}${sub?`<small>${sub}</small>`:''}` : ''; }
@@ -691,7 +1066,12 @@ function toast(msg){
 }
 
 function faceSVG(i, rev){
-  const c = CARDS[i];
+  const c = CARDS[i], en = state.lang === 'en';
+  const nameBlock = en
+    ? `<text x="150" y="437" text-anchor="middle" class="fen" style="font-size:${c.en.length>14?17:22}px">${c.en.toUpperCase()}</text>
+       <text x="150" y="467" text-anchor="middle" class="fzh">${c.zh}</text>`
+    : `<text x="150" y="443" text-anchor="middle" class="zh">${c.zh}</text>
+       <text x="150" y="470" text-anchor="middle" class="en">${c.en.toUpperCase()}</text>`;
   return `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg">
   <rect width="300" height="500" fill="url(#faceBg)"/>
   <g${rev?' transform="rotate(180 150 250)"':''}>
@@ -708,8 +1088,7 @@ function faceSVG(i, rev){
     <circle cx="150" cy="240" r="106" fill="none" stroke="#caa85c" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity=".5"/>
     <g transform="translate(50,140)" stroke="#e8c76f" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">${ART[i]}</g>
     <path d="M104 398 H196 M96 398 l-6 0 M204 398 l6 0" stroke="#caa85c" stroke-width="1" opacity=".6"/>
-    <text x="150" y="443" text-anchor="middle" class="zh">${c.zh}</text>
-    <text x="150" y="470" text-anchor="middle" class="en">${c.en.toUpperCase()}</text>
+    ${nameBlock}
   </g></svg>`;
 }
 const backSVG = `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg"><use href="#cardBack"/></svg>`;
@@ -718,7 +1097,6 @@ function buildDeck(){
   stage.innerHTML = ''; stage.className = '';
   state.els = []; state.picks = []; state.flipped = 0; state.shuffles = 0;
   state.order = CARDS.map((_,i)=>i);
-  // pre-shuffle silently so the fan is never in book order
   for (let i=state.order.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [state.order[i],state.order[j]]=[state.order[j],state.order[i]]; }
   state.jitter = CARDS.map(()=>({ x:(Math.random()-.5)*3, y:(Math.random()-.5)*3, r:(Math.random()-.5)*3 }));
   for (let i=0;i<CARDS.length;i++){
@@ -749,7 +1127,7 @@ function layoutDeck(instant){
   });
 }
 
-/* ---- shuffle: cards burst out both sides, swirl, and re-stack ---- */
+/* ---- shuffle ---- */
 let shuffling = false;
 function doShuffle(){
   if (shuffling) return;
@@ -757,7 +1135,6 @@ function doShuffle(){
   Snd.riffle(); buzz(18);
   const { w, h } = stageSize();
   const dy = -h*.02;
-  // real reorder
   for (let i=state.order.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [state.order[i],state.order[j]]=[state.order[j],state.order[i]]; }
   const spreadX = Math.min(w*.34, 240), spreadY = Math.min(h*.16, 130);
   let done = 0;
@@ -779,26 +1156,25 @@ function doShuffle(){
       el.style.transform = base;
       if (++done === state.order.length){
         shuffling = false;
-        if (state.shuffles === 1) setHint('可以多洗几次，直到心里踏实', '然后凭直觉切牌');
+        if (state.shuffles === 1) setHint(L().hMore, L().hMoreS);
       }
     };
   });
 }
 
-/* ---- cut: split into 3 piles, tapping one puts it on top ---- */
+/* ---- cut ---- */
 function doCut(){
   if (shuffling) return;
   state.phase = 'cut';
   stage.className = 'cut';
   Snd.slide(); buzz(12);
   $('#deck-glow').classList.add('off');
-  setHint('凭直觉，轻点其中一叠', '它将成为命运的开端');
+  setHint(L().hCut, L().hCutS);
   setActions([]);
   const { w, h } = stageSize();
   const dy = -h*.02;
   const px = Math.min(w*.30, 230);
   const xs = [-px, 0, px];
-  const names = ['壹','贰','叁'];
   const third = Math.ceil(state.order.length/3);
   state.order.forEach((ci, pos) => {
     const el = state.els[ci];
@@ -806,7 +1182,7 @@ function doCut(){
     const inPile = pos - pile*third;
     el.dataset.pile = pile;
     el.classList.toggle('pile-top', inPile === 0);
-    if (inPile === 0) el.querySelector('.pile-tag').textContent = names[pile];
+    if (inPile === 0) el.querySelector('.pile-tag').textContent = L().piles[pile];
     const j = state.jitter[ci];
     el.style.transform = T(xs[pile] + j.x, dy + j.y - (third-inPile)*.5, j.r);
     el.style.zIndex = 100 + (third - inPile);
@@ -820,11 +1196,11 @@ function onPilePicked(pile){
   state.els.forEach(el => { el.classList.remove('pile-top'); el.querySelector('.pile-tag').textContent=''; delete el.dataset.pile; });
   stage.className = '';
   layoutDeck(false);
-  setHint('命运已然就位', '');
+  setHint(L().hSet, '');
   setTimeout(fanOut, 820);
 }
 
-/* ---- fan out for picking ---- */
+/* ---- fan ---- */
 function fanOut(){
   state.phase = 'fan';
   stage.className = 'fan';
@@ -832,8 +1208,7 @@ function fanOut(){
   $('#deck-glow').classList.add('off');
   document.getElementById('ritual').classList.add('gone-ritual');
   const need = state.spreadN;
-  setHint(need===1 ? '默想心中之问，选出今日之牌' : '静心默想，依次选出三张牌',
-          need===1 ? 'follow your intuition' : '第一张为过去 · 第二张为现在 · 第三张为未来');
+  setHint(need===1 ? L().hPick1 : L().hPick3, need===1 ? L().hPick1S : L().hPick3S);
   setActions([]);
   layoutFan();
   updatePickCount();
@@ -843,11 +1218,10 @@ function layoutFan(){
   const n = state.order.length;
   const cw = state.els[0].offsetWidth;
   const R = Math.min(520, Math.max(h*.45, w*.55));
-  // widest half-angle that keeps the outermost cards on screen
   const halfSin = Math.min(.95, Math.max(.25, (w*.5 - cw*.55) / R));
   const half = Math.min(55, Math.asin(halfSin) * 180/Math.PI);
-  const apexY = h*.64;                       // arc apex (card centre), from stage top
-  const pivotDrop = apexY - h*.5 + R;        // pivot, relative to stage centre
+  const apexY = h*.64;
+  const pivotDrop = apexY - h*.5 + R;
   state.order.forEach((ci, pos) => {
     const el = state.els[ci];
     if (el.classList.contains('gone') || el.classList.contains('placed')) return;
@@ -887,7 +1261,7 @@ function onCardClick(ci){
   }
 }
 
-/* ---- fly the chosen cards to centre slots ---- */
+/* ---- fly picks to centre slots ---- */
 function slotTransforms(){
   const { w, h } = stageSize();
   const n = state.spreadN;
@@ -914,7 +1288,7 @@ function placePicks(lifted){
 function gatherPicks(){
   state.phase = 'reveal';
   stage.className = 'reveal';
-  setHint('轻触卡牌，揭示指引','');
+  setHint(L().hFlip,'');
   pickCountEl.classList.remove('show');
   Snd.slide(); buzz(10);
   const pickedSet = new Set(state.picks.map(p=>p.i));
@@ -929,9 +1303,8 @@ function gatherPicks(){
   });
   state.picks.forEach((p, k) => {
     const el = state.els[p.i];
-    // build the front face now — orientation was decided at pick time
     el.querySelector('.face.front').innerHTML = faceSVG(p.i, p.rev);
-    el.querySelector('.slot-tag').textContent = state.spreadN>1 ? POS3[k] : '今日之牌 · YOUR CARD';
+    el.querySelector('.slot-tag').textContent = state.spreadN>1 ? L().pos[k] : L().slot1;
     el.classList.remove('selected');
     el.classList.add('revealing');
     el.style.transitionDelay = (k*140)+'ms';
@@ -973,75 +1346,142 @@ function sparkleBurst(el){
 
 /* ---- reading sheet ---- */
 function readingHTML(){
-  const advP = state.picks[state.spreadN===1 ? 0 : 1];   // advice from today's / "present" card
-  return state.picks.map((p, k) => {
+  const en = state.lang === 'en';
+  const cards = state.picks.map((p, k) => {
     const c = CARDS[p.i];
-    const kws = (p.rev ? c.rkw : c.kw).map(w=>`<span class="r-kw">${w}</span>`).join('');
+    const kws = KW(c, p.rev).map(w=>`<span class="r-kw">${w}</span>`).join('');
+    const nameMain = en
+      ? `<span class="r-name lat">${c.en}</span><span class="r-en">${c.rn} · ${c.zh}</span>`
+      : `<span class="r-name">${c.zh}</span><span class="r-en">${c.rn} · ${c.en.toUpperCase()}</span>`;
     return `<div class="reading">
-      ${state.spreadN>1?`<div class="r-pos">${POS3[k]}</div>`:''}
+      ${state.spreadN>1?`<div class="r-pos">${L().pos[k]}</div>`:''}
       <div class="r-head">
-        <span class="r-name">${c.zh}</span>
-        <span class="r-en">${c.rn} · ${c.en.toUpperCase()}</span>
-        <span class="r-ori ${p.rev?'rev':'up'}">${p.rev?'逆位':'正位'}</span>
+        ${nameMain}
+        <span class="r-ori ${p.rev?'rev':'up'}">${p.rev?L().rev:L().up}</span>
       </div>
       <div class="r-kws">${kws}</div>
-      <p class="r-text">${p.rev ? c.rev : c.up}</p>
-      ${k===state.picks.length-1?`<div class="r-adv"><b>今日签语</b><br>${CARDS[advP.i].adv}</div>`:''}
+      <p class="r-text">${MEAN(c, p.rev)}</p>
     </div>`;
   }).join('');
+  const q = state.question
+    ? `<div class="o-q">${L().yourQ}: <b>“${escapeHtml(state.question)}”</b></div>` : '';
+  return cards + `
+    <div class="oracle">
+      <div class="o-head"><span class="o-title">✦ ${L().oracle} ✦</span><span class="o-badge" id="o-badge"></span></div>
+      ${q}
+      <div class="o-text" id="o-text"><span class="o-shimmer">${L().oWait}</span></div>
+    </div>`;
 }
+function escapeHtml(s){ return s.replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m])); }
+
 function showSheet(){
   sheetBody.innerHTML = readingHTML() + `
     <div class="sheet-btns">
-      <button class="btn ghost" id="btn-copy">复制签文</button>
-      <button class="btn ghost" id="btn-again">重新占卜</button>
+      <button class="btn ghost" id="btn-copy">${L().copy}</button>
+      <button class="btn ghost" id="btn-again">${L().again}</button>
     </div>`;
   $('#btn-copy').onclick = copyReading;
   $('#btn-again').onclick = resetAll;
   sheet.classList.add('show');
 }
+
+async function runOracle(saved){
+  const run = ++state.oracleRun;
+  const textEl = $('#o-text'), badge = $('#o-badge');
+  if (!textEl) return;
+  if (saved && saved.text){
+    textEl.textContent = saved.text;
+    badge.textContent = saved.ai ? L().oAI : L().oClassic;
+    state.oracleText = saved;
+    return;
+  }
+  const res = await Oracle.generate(state.picks, state.question, state.lang, partial => {
+    if (state.oracleRun === run && textEl.isConnected) textEl.textContent = partial;
+  });
+  if (state.oracleRun !== run) return;
+  badge.textContent = res.ai ? L().oAI : L().oClassic;
+  state.oracleText = res;
+  if (res.ai || !textEl.isConnected){
+    textEl.textContent = res.text;
+  } else {
+    // gentle word-by-word reveal for the composed reading
+    const words = res.text.split(state.lang==='en' ? ' ' : '');
+    const sep = state.lang==='en' ? ' ' : '';
+    textEl.textContent = '';
+    let i = 0;
+    const tick = () => {
+      if (state.oracleRun !== run || !textEl.isConnected){ return; }
+      textEl.textContent += (i && sep ? sep : '') + words[i];
+      if (++i < words.length) setTimeout(tick, state.lang==='en' ? 34 : 18);
+    };
+    tick();
+  }
+  saveToday();
+}
+
+function saveToday(){
+  try{
+    localStorage.setItem(todayKey(), JSON.stringify({
+      n: state.spreadN, picks: state.picks, q: state.question,
+      oracle: state.oracleText || null, lang: state.lang
+    }));
+  }catch(e){}
+}
+
 function finishReading(){
   setHint('','');
   Snd.bell();
-  try{ localStorage.setItem(todayKey(), JSON.stringify({ n: state.spreadN, picks: state.picks })); }catch(e){}
+  state.oracleText = null;
+  saveToday();
   showSheet();
-  // nudge cards up so the sheet doesn't cover them
+  runOracle(null);
   placePicks(true);
 }
+
 function copyReading(){
   const d = new Date();
-  const lines = [`✦ 每日塔罗 ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ✦`];
+  const lines = [`✦ Daily Tarot · ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ✦`];
+  if (state.question) lines.push(`${L().yourQ}: ${state.question}`);
   state.picks.forEach((p,k)=>{
     const c = CARDS[p.i];
-    lines.push(`${state.spreadN>1 ? POS3[k].split(' ')[0]+'：':''}${c.zh}（${p.rev?'逆位':'正位'}）— ${(p.rev?c.rkw:c.kw).join(' / ')}`);
-    lines.push(p.rev ? c.rev : c.up);
+    const pos = state.spreadN>1 ? `${L().posN[k]}: ` : '';
+    lines.push(`${pos}${N(c)} (${p.rev?L().rev:L().up}) — ${KW(c,p.rev).join(' / ')}`);
+    lines.push(MEAN(c, p.rev));
   });
+  if (state.oracleText && state.oracleText.text){
+    lines.push(`— ${L().oracle} —`);
+    lines.push(state.oracleText.text);
+  }
   const txt = lines.join('\n');
   (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
-    .then(()=>toast('签文已复制 ✦'))
-    .catch(()=>toast('复制失败，请截图保存'));
+    .then(()=>toast(L().copied))
+    .catch(()=>toast(L().copyFail));
 }
 
 /* ---- phase entries ---- */
 function enterTable(){
+  state.question = ($('#q-input').value || '').trim();
   $('#welcome').classList.add('hidden');
   $('#table').classList.remove('hidden');
+  $('#lang-toggle').style.display = 'none';
   sheet.classList.remove('show');
   document.getElementById('ritual').classList.remove('gone-ritual');
   $('#deck-glow').classList.remove('off');
   state.phase = 'deck';
   buildDeck();
-  setHint('洗牌，把今日的心绪注入牌中', '心中默念想问之事');
+  setHint(L().hShuffle, L().hShuffleS);
   setActions([
-    { label:'洗 牌', primary:true, on:doShuffle },
-    { label:'切 牌', on:()=>{ if(state.shuffles===0){ toast('先洗一次牌吧 ✦'); return;} doCut(); } },
-    { label:'直接展牌', ghost:true, on:()=>{ if(!shuffling) fanOut(); } },
+    { label:L().bShuffle, primary:true, on:doShuffle },
+    { label:L().bCut, on:()=>{ if(state.shuffles===0){ toast(L().tFirst); return;} doCut(); } },
+    { label:L().bSkip, ghost:true, on:()=>{ if(!shuffling) fanOut(); } },
   ]);
 }
 function resetAll(){
+  state.oracleRun++;
   sheet.classList.remove('show');
   $('#table').classList.add('hidden');
   $('#welcome').classList.remove('hidden');
+  $('#lang-toggle').style.display = '';
   state.phase = 'welcome';
   refreshTodayChip();
 }
@@ -1053,8 +1493,11 @@ function showSaved(){
   if (!saved) return;
   let data; try{ data = JSON.parse(saved); }catch(e){ return; }
   state.spreadN = data.n;
+  state.question = data.q || '';
+  if (data.lang && I18N[data.lang]){ state.lang = data.lang; localStorage.setItem('tarot-lang', state.lang); applyLang(); }
   $('#welcome').classList.add('hidden');
   $('#table').classList.remove('hidden');
+  $('#lang-toggle').style.display = 'none';
   buildDeck();
   state.picks = data.picks;
   state.phase = 'reveal'; state.flipped = data.picks.length;
@@ -1067,7 +1510,7 @@ function showSaved(){
   data.picks.forEach((p,k)=>{
     const el = state.els[p.i];
     el.querySelector('.face.front').innerHTML = faceSVG(p.i, p.rev);
-    el.querySelector('.slot-tag').textContent = data.n>1 ? POS3[k] : '今日之牌 · YOUR CARD';
+    el.querySelector('.slot-tag').textContent = data.n>1 ? L().pos[k] : L().slot1;
     el.style.transition = 'none';
     el.style.zIndex = 300+k;
     el.classList.add('placed','flipped');
@@ -1075,6 +1518,27 @@ function showSaved(){
   placePicks(true);
   data.picks.forEach(p=>{ const el = state.els[p.i]; void el.offsetWidth; el.style.transition = ''; });
   showSheet();
+  runOracle(data.oracle);
+}
+
+/* ---- language ---- */
+function applyLang(){
+  const t = L();
+  const en = state.lang === 'en';
+  const main = $('#t-main');
+  main.textContent = t.main;
+  main.classList.toggle('lat', en);
+  main.classList.toggle('han', !en);
+  $('#t-sub').textContent = t.sub;
+  $('#t-sub').style.fontFamily = en ? "'Noto Serif SC',serif" : "Cinzel,serif";
+  $('#t-tag').textContent = t.tag;
+  $('#sp1-name').textContent = t.sp1; $('#sp1-desc').textContent = t.sp1d;
+  $('#sp3-name').textContent = t.sp3; $('#sp3-desc').textContent = t.sp3d;
+  $('#q-input').placeholder = t.q;
+  $('#btn-start').textContent = t.start;
+  $('#today-chip').textContent = t.chip;
+  $('#lang-toggle').textContent = en ? '中文' : 'EN';
+  document.documentElement.lang = en ? 'en' : 'zh-CN';
 }
 
 /* ---- wire up ---- */
@@ -1088,6 +1552,11 @@ document.querySelectorAll('.spread-opt').forEach(opt => {
 });
 $('#btn-start').addEventListener('click', () => { Snd.warm(); Snd.slide(); enterTable(); });
 $('#today-chip').addEventListener('click', showSaved);
+$('#lang-toggle').addEventListener('click', () => {
+  state.lang = state.lang === 'en' ? 'zh' : 'en';
+  localStorage.setItem('tarot-lang', state.lang);
+  applyLang(); Snd.flick();
+});
 const st = $('#sound-toggle');
 function paintSound(){ st.textContent = Snd.muted ? '∅' : '♪'; st.style.opacity = Snd.muted ? .5 : 1; }
 st.addEventListener('click', () => { Snd.toggle(); paintSound(); });
@@ -1100,6 +1569,7 @@ addEventListener('resize', () => {
     placePicks(state.flipped === state.picks.length);
   }
 });
+applyLang();
 refreshTodayChip();
 </script>
 </body>
