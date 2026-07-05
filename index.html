@@ -1,913 +1,1106 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="theme-color" content="#2c1f1f">
-    <title>每日占卜 | 3D Crystal Ball</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    
-    <link rel="stylesheet" media="print" onload="this.media='all'" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap">
-    <noscript>
-      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Serif+SC:wght@400;700&display=swap">
-    </noscript>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0d0a1f">
+<title>每日塔罗 | Daily Tarot</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600&family=Noto+Serif+SC:wght@400;600;700&display=swap">
+<link rel="manifest" href="manifest.webmanifest">
+<style>
+:root{
+  --gold:#e8c76f; --gold-dim:#caa85c; --gold-deep:#9c7c3c;
+  --ink:#f4ead0; --ink-dim:#b9aa88;
+  --bg0:#0d0a1f; --bg1:#171233; --bg2:#241a4d;
+  --cw: clamp(66px, 17vmin, 118px);
+  --ch: calc(var(--cw) * 5 / 3);
+}
+*{ box-sizing:border-box; margin:0; padding:0; }
+html,body{ height:100%; overflow:hidden; }
+body{
+  font-family:'Noto Serif SC', serif;
+  color:var(--ink);
+  background:
+    radial-gradient(120vmax 90vmax at 50% -20%, #2c2160 0%, transparent 55%),
+    radial-gradient(90vmax 70vmax at 85% 110%, #241a4d 0%, transparent 60%),
+    linear-gradient(180deg, #100c26 0%, var(--bg0) 60%, #080614 100%);
+  user-select:none; -webkit-user-select:none;
+  -webkit-tap-highlight-color:transparent; -webkit-touch-callout:none;
+}
+#sky{ position:fixed; inset:0; z-index:0; pointer-events:none; }
+#app{ position:fixed; inset:0; z-index:1; overflow:hidden; }
 
-    <link rel="manifest" href="manifest.webmanifest">
-    
-    <script type="importmap">
-        {
-            "imports": {
-                "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
-                "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"
-            }
-        }
-    </script>
-    <script src="https://cdn.jsdelivr.net/npm/simplex-noise@4.0.1/dist/simplex-noise.min.js"></script>
+/* ---------- shared UI ---------- */
+.btn{
+  font-family:'Noto Serif SC',serif; font-size:15px; letter-spacing:.35em; text-indent:.35em;
+  color:var(--ink); background:linear-gradient(180deg, rgba(232,199,111,.14), rgba(232,199,111,.04));
+  border:1px solid rgba(232,199,111,.55); border-radius:999px;
+  padding:12px 28px; cursor:pointer; backdrop-filter:blur(6px);
+  transition:all .25s ease; box-shadow:0 0 0 rgba(232,199,111,0);
+}
+.btn:hover{ border-color:var(--gold); box-shadow:0 0 22px rgba(232,199,111,.28); transform:translateY(-1px); }
+.btn:active{ transform:translateY(1px) scale(.98); }
+.btn.primary{ background:linear-gradient(180deg, rgba(232,199,111,.32), rgba(200,160,70,.12)); font-weight:600; }
+.btn.ghost{ border-color:rgba(232,199,111,.25); color:var(--ink-dim); letter-spacing:.2em; font-size:13px; padding:9px 20px; }
+.btn:disabled{ opacity:.35; pointer-events:none; }
 
-    <style>
-        :root {
-            --bg-color: #2c1f1f;
-            --text-color: #f0e6d2;
-            --accent-color: #e6a23c;
-            --wood-texture: repeating-linear-gradient(45deg, #4a3838, #4a3838 10px, #3e2e2e 10px, #3e2e2e 20px);
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; }
-        html, body { height: 100%; overflow: hidden; }
-        body {
-            font-family: 'Noto Serif SC', serif;
-            background-color: var(--bg-color);
-            color: var(--text-color);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-image: var(--wood-texture);
-        }
-        .app-container {
-            width: 100%; height: 100%;
-            max-width: 900px; max-height: 1700px;
-            background: #3a2a2a;
-            border-radius: 20px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5), inset 0 0 15px rgba(0,0,0,0.5);
-            overflow: hidden; position: relative;
-            user-select: none; 
-            -webkit-user-select: none;
-            -webkit-tap-highlight-color: transparent;
-            -webkit-touch-callout: none; 
-        }
-        #install-button {
-            position: absolute;
-            bottom: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            z-index: 200;
-            display: none; /* Hidden by default */
-        }
-        .screen {
-            position: absolute; width: 100%; height: 100%;
-            display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            padding: 0px; text-align: center;
-            transition: opacity 0.5s ease-in-out, transform 0.5s ease-in-out;
-        }
-        .screen.hidden { opacity: 0; pointer-events: none; transform: scale(0.95); }
-        #screen1 {
-            background: 
-                radial-gradient(circle at 50% 65%, rgba(224, 206, 172, 0.15) 0%, transparent 40%),
-                radial-gradient(circle at center, #501855, var(--bg-color) 70%);
-        }
-        .cabin-button {
-            position: absolute; top: 20px; right: 20px;
-            background: none; border: none; cursor: pointer; z-index: 10; padding: 10px;
-        }
-        .cabin-button svg { width: 32px; height: 32px; fill: var(--text-color); transition: transform 0.3s; }
-        .cabin-button:hover svg { transform: scale(1.1); filter: drop-shadow(0 0 5px var(--accent-color)); }
-        
-        #language-selector {
-            position: absolute; top: 25px; left: 20px; z-index: 11;
-            background: rgba(0,0,0,0.2);
-            padding: 5px; border-radius: 8px;
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        #language-selector .lang-option {
-            color: #aaa; text-decoration: none; padding: 5px 8px;
-            font-size: 0.9rem; font-weight: bold; cursor: pointer;
-            transition: color 0.3s ease;
-        }
-        #language-selector .lang-option.active {
-            color: var(--accent-color); text-shadow: 0 0 5px var(--accent-color);
-        }
+#sound-toggle{
+  position:fixed; top:calc(env(safe-area-inset-top, 0px) + 14px); right:16px; z-index:60;
+  width:42px; height:42px; border-radius:50%; border:1px solid rgba(232,199,111,.4);
+  background:rgba(20,15,45,.5); color:var(--gold); font-size:17px; cursor:pointer;
+  backdrop-filter:blur(6px); transition:all .25s;
+}
+#sound-toggle:hover{ box-shadow:0 0 16px rgba(232,199,111,.3); }
 
-        .title { 
-            font-size: 2rem; font-weight: 700; margin-bottom: 20px; 
-            text-shadow: 0 0 10px var(--accent-color); 
-            top: 10rem; position: absolute;
-        }
-        
-        #three-canvas-container {
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            z-index: 2;
-            position: relative; 
-        }
+.screen{ position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center;
+  transition:opacity .6s ease, transform .6s ease; }
+.screen.hidden{ opacity:0; pointer-events:none; transform:scale(.97); }
 
-        #three-canvas-container canvas {
-            display: block;
-        }
+/* ---------- welcome ---------- */
+#welcome{ text-align:center; padding:24px; gap:0; }
+.w-emblem{ width:min(150px,22vmin); margin-bottom:10px; filter:drop-shadow(0 0 24px rgba(232,199,111,.35));
+  animation:breathe 5s ease-in-out infinite; }
+@keyframes breathe{ 0%,100%{ transform:translateY(0) } 50%{ transform:translateY(-8px) } }
+.w-title-en{ font-family:Cinzel,serif; font-size:clamp(13px,2.4vmin,17px); letter-spacing:.7em; text-indent:.7em;
+  color:var(--gold-dim); margin-bottom:8px; }
+.w-title{ font-size:clamp(34px,8vmin,56px); font-weight:700; letter-spacing:.28em; text-indent:.28em;
+  background:linear-gradient(180deg,#fdf3d3 20%, var(--gold) 55%, #a5813e 100%);
+  -webkit-background-clip:text; background-clip:text; color:transparent;
+  filter:drop-shadow(0 2px 14px rgba(232,199,111,.25)); }
+.w-divider{ display:flex; align-items:center; gap:12px; margin:18px 0 10px; color:var(--gold-dim); opacity:.9; }
+.w-divider::before,.w-divider::after{ content:""; width:min(90px,18vw); height:1px;
+  background:linear-gradient(90deg, transparent, var(--gold-dim)); }
+.w-divider::after{ transform:scaleX(-1); }
+.w-sub{ color:var(--ink-dim); font-size:14px; letter-spacing:.25em; margin-bottom:34px; }
+.spreads{ display:flex; gap:16px; margin-bottom:34px; flex-wrap:wrap; justify-content:center; }
+.spread-opt{
+  width:min(178px,42vw); padding:18px 12px 16px; border-radius:14px; cursor:pointer;
+  border:1px solid rgba(232,199,111,.28); background:linear-gradient(180deg, rgba(36,26,77,.55), rgba(16,12,38,.55));
+  transition:all .3s ease; position:relative;
+}
+.spread-opt:hover{ transform:translateY(-4px); }
+.spread-opt.on{ border-color:var(--gold); box-shadow:0 0 26px rgba(232,199,111,.22), inset 0 0 18px rgba(232,199,111,.06); }
+.spread-opt .so-cards{ display:flex; justify-content:center; gap:5px; margin-bottom:12px; height:44px; align-items:center; }
+.spread-opt .so-cards i{ display:block; width:26px; height:40px; border-radius:4px;
+  border:1px solid rgba(232,199,111,.6); background:linear-gradient(160deg,#2b2058,#171233);
+  box-shadow:0 3px 8px rgba(0,0,0,.5); }
+.spread-opt .so-cards i:nth-child(2){ height:44px; width:28px; }
+.spread-opt.on .so-cards i{ border-color:var(--gold); box-shadow:0 0 10px rgba(232,199,111,.35); }
+.spread-opt .so-name{ font-size:16px; letter-spacing:.2em; margin-bottom:4px; }
+.spread-opt .so-desc{ font-size:12px; color:var(--ink-dim); letter-spacing:.1em; }
+#today-chip{ margin-top:18px; font-size:13px; color:var(--ink-dim); letter-spacing:.15em;
+  border:none; background:none; cursor:pointer; text-decoration:underline dotted rgba(232,199,111,.5);
+  text-underline-offset:5px; font-family:inherit; }
+#today-chip:hover{ color:var(--gold); }
 
-        .ball-stand {
-            width: 120px;
-            height: 40px;
-            background: #251a1a; /* Adjusted color for better contrast */
-            border-radius: 8px 8px 40% 40% / 8px 8px 15px 15px;
-            box-shadow: inset 0 5px 10px rgba(145, 96, 151, 0.5);
+/* ---------- table ---------- */
+#table{ justify-content:flex-start; }
+#hint{
+  margin-top:calc(env(safe-area-inset-top, 0px) + 26px); text-align:center; min-height:52px; z-index:40;
+  font-size:clamp(15px,2.6vmin,18px); letter-spacing:.3em; text-indent:.3em; color:var(--ink);
+  text-shadow:0 0 18px rgba(232,199,111,.25); transition:opacity .4s; padding:0 20px;
+}
+#hint small{ display:block; font-size:12px; letter-spacing:.2em; color:var(--ink-dim); margin-top:7px; }
+#stage{ position:absolute; inset:0; }
 
-            position: absolute;   /* Position it relative to the container */
-            bottom: 33%;          /* Position it 15% from the bottom of the container */
-            left: 50%;            /* Center it horizontally */
-            transform: translateX(-50%); /* Fine-tune the horizontal centering */
-            z-index: -1;          /* Ensure it's behind the ball but above the background */
-        }
+/* ritual circle under the deck */
+#ritual{ position:absolute; left:50%; top:50%; width:min(74vmin,560px); height:min(74vmin,560px);
+  transform:translate(-50%,-50%); opacity:.5; pointer-events:none; transition:opacity .8s;
+  animation:spin 140s linear infinite; }
+@keyframes spin{ to{ transform:translate(-50%,-50%) rotate(360deg); } }
+#ritual.gone-ritual{ opacity:.12; }
+#deck-glow{ position:absolute; left:50%; top:50%; width:min(50vmin,380px); height:min(30vmin,230px);
+  transform:translate(-50%,-46%); border-radius:50%; pointer-events:none;
+  background:radial-gradient(closest-side, rgba(232,199,111,.20), rgba(232,199,111,.05) 55%, transparent 72%);
+  animation:glowpulse 3.4s ease-in-out infinite; transition:opacity .6s; }
+#deck-glow.off{ animation:none; opacity:0; }
+@keyframes glowpulse{ 0%,100%{ opacity:.65; transform:translate(-50%,-46%) scale(1);} 50%{ opacity:1; transform:translate(-50%,-46%) scale(1.07);} }
 
-        /* The parent container still handles the floating animation */
-        .crystal-ball-container { 
-            position: relative;
-            cursor: pointer;
-            width: 100%;
-            height: 100%;
-            filter: drop-shadow(0 20px 25px rgba(0,0,0,0.5)); 
-            animation: float 6s ease-in-out infinite;
-        }
+/* ---------- cards ---------- */
+.card{
+  position:absolute; left:50%; top:50%;
+  width:var(--cw); height:var(--ch);
+  margin-left:calc(var(--cw) / -2); margin-top:calc(var(--ch) / -2);
+  transform-style:preserve-3d; cursor:pointer;
+  transition:transform .75s cubic-bezier(.34,1.2,.4,1), opacity .5s ease;
+  will-change:transform;
+}
+.card .inner{
+  position:relative; width:100%; height:100%;
+  transform-style:preserve-3d;
+  transition:transform .3s ease;
+}
+.card.flipped .inner{ transform:rotateY(180deg); transition:transform .85s cubic-bezier(.35,.1,.25,1); }
+.face{
+  position:absolute; inset:0; border-radius:9.5% / 5.7%;
+  backface-visibility:hidden; -webkit-backface-visibility:hidden;
+  overflow:hidden; background:var(--bg1);
+  box-shadow:0 7px 20px rgba(0,0,0,.55), 0 1px 3px rgba(0,0,0,.4);
+}
+.face svg{ display:block; width:100%; height:100%; }
+.face.front{ transform:rotateY(180deg); }
+.face.back::after{ /* moving sheen on the card back */
+  content:""; position:absolute; inset:0;
+  background:linear-gradient(115deg, transparent 30%, rgba(255,240,200,.10) 45%, rgba(255,240,200,.16) 50%, rgba(255,240,200,.10) 55%, transparent 70%);
+  background-size:260% 260%; animation:sheen 5.5s ease-in-out infinite;
+}
+@keyframes sheen{ 0%{ background-position:120% 0 } 55%,100%{ background-position:-120% 0 } }
 
-        @keyframes holding-glow {
-        0% {
-            box-shadow: 0 0 15px 5px rgba(230, 162, 60, 0.2);
-        }
-        50% {
-            box-shadow: 0 0 35px 20px rgba(230, 162, 60, 0.5);
-        }
-        100% {
-            box-shadow: 0 0 15px 5px rgba(230, 162, 60, 0.2);
-        }
-        }
+#stage.fan .card:not(.selected):not(.gone):hover .inner{ transform:translateY(calc(var(--ch) * -0.16)) scale(1.05); }
+#stage.fan .card:not(.selected):not(.gone):hover .face{ box-shadow:0 16px 34px rgba(0,0,0,.6), 0 0 22px rgba(232,199,111,.3); }
+.card.selected .inner{ transform:translateY(calc(var(--ch) * -0.24)); }
+.card.selected .face{ box-shadow:0 18px 40px rgba(0,0,0,.65), 0 0 0 2px var(--gold), 0 0 30px rgba(232,199,111,.55); }
+.card.gone{ opacity:0; pointer-events:none; }
+.card.revealing{ transition:transform .9s cubic-bezier(.3,1.1,.35,1); }
+.card.glowing .face{ box-shadow:0 20px 50px rgba(0,0,0,.6), 0 0 44px rgba(232,199,111,.5); }
+.slot-tag{
+  position:absolute; left:50%; bottom:-34px; transform:translateX(-50%);
+  transform-origin:50% 0;
+  font-size:12.5px; letter-spacing:.3em; text-indent:.3em; color:var(--gold-dim); white-space:nowrap;
+  opacity:0; transition:opacity .6s .3s;
+}
+.card.placed .slot-tag{ opacity:1; }
 
-        .crystal-ball-container.holding {
-        animation: holding-glow 1.5s ease-in-out infinite;
-        }
-        @keyframes float { 
-            0% { transform: translateY(0px); } 
-            50% { transform: translateY(-15px); } 
-            100% { transform: translateY(0px); } 
-        }
-        .info-text {
-            font-size: 1rem; max-width: 80%; line-height: 1.6;position: absolute;bottom: 14rem; 
-            transition: color 0.5s ease-in-out, text-shadow 0.5s ease-in-out, transform 0.5s ease-in-out; }
-        .golden-glow {
-            color: var(--accent-color);
-            text-shadow: 0 0 8px var(--accent-color), 0 0 15px rgba(255, 223, 150, 0.5);
-        }
-        .overlay {
-            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.8); backdrop-filter: blur(10px);
-            z-index: 100; display: flex; flex-direction: column;
-            justify-content: center; align-items: center;
-            padding: 20px; transition: opacity 0.5s;
-        }
-        .overlay.hidden { opacity: 0; pointer-events: none; }
-        .form-content, .modal-content {
-            background: rgba(44, 31, 31, 0.9); padding: 30px;
-            border-radius: 15px; text-align: center;
-            width: 90%; max-width: 380px;
-            box-shadow: 0 0 20px rgba(0,0,0,0.5);
-            border: 1px solid rgba(255,255,255,0.1);
-        }
-        .form-content h2, .modal-content h3 { margin-bottom: 20px; color: var(--accent-color); }
-        .form-content .input-group { display: flex; gap: 10px; margin-bottom: 15px; }
-        .form-content input, .form-content select { padding: 12px; border-radius: 8px; border: 2px solid var(--accent-color); background: rgba(0,0,0,0.3); color: var(--text-color); font-size: 1rem; width: 100%; }
-        .modal-content p { line-height: 1.7; margin-bottom: 20px; }
-        .lucky-elements { display: flex; justify-content: space-around; align-items: center; margin-bottom: 20px; font-size: 1rem; }
-        .lucky-elements .color-swatch { width: 20px; height: 20px; border-radius: 50%; display: inline-block; vertical-align: middle; margin-left: 8px; border: 1px solid #fff3; }
-        .btn-primary { padding: 12px 25px; border-radius: 8px; border: none; background: var(--accent-color); color: var(--bg-color); font-size: 1rem; font-weight: bold; cursor: pointer; transition: all 0.3s ease; margin-top: 10px; }
-        .btn-primary:hover { transform: scale(1.05); box-shadow: 0 0 15px var(--accent-color); }
-        #screen2 { background: linear-gradient(180deg, #3a2a2a, #201515); justify-content: flex-start; padding-top: 70px; overflow-y: auto; }
-        .back-button { position: absolute; top: 20px; left: 20px; background: none; border: none; color: var(--text-color); font-size: 2rem; cursor: pointer; z-index: 10; }
-        .results-content { padding:30px;display: flex; flex-direction: column; gap: 20px; width: 100%; padding-bottom: 30px; }
-        .result-card { background: rgba(0,0,0,0.2); padding: 20px; border-radius: 15px; border-left: 5px solid var(--accent-color); text-align: left; }
-        .result-card h3 { margin-bottom: 10px; color: var(--accent-color); font-size: 1.2rem; display: flex; align-items: center; justify-content: space-between; }
-        .result-card h3 .explanation { font-size: 0.8rem; color: #ccc; font-weight: 400; }
-        .result-card p, .result-card li { font-size: 0.95rem; line-height: 1.7; }
-        
-        #today-card {
-            position: absolute; bottom: 3rem; left: 50%;
-            transform: translateX(-50%); width: 90%; max-width: 400px;
-            z-index: 5; padding: 15px;
-            transition: opacity 0.5s ease-in-out;
-        }
-        #today-card.hidden { opacity: 0; pointer-events: none; }
-        #today-card h3 { font-size: 1rem; margin-bottom: 8px; }
-        #today-card p { font-size: 0.9rem; line-height: 1.5; margin-bottom: 10px; }
-        #today-card .lucky-elements { font-size: 0.9rem; justify-content: flex-start; gap: 20px; margin-bottom: 0; }
-        
-        .signs-display { display: flex; justify-content: space-around; text-align: center; }
-        .sign { font-size: 1rem; }
-        .sign .emoji { font-size: 2.5rem; display: block; margin-bottom: 5px; }
-        .todo-section h4 { font-size: 1rem; margin-bottom: 10px; color: #ddd; border-bottom: 1px solid #555; padding-bottom: 5px;}
-        .todo-list { list-style: none; padding-left: 0; }
-        .todo-list li { margin-bottom: 10px; display: flex; align-items: center; cursor: pointer;}
-        .todo-list li input[type="checkbox"] { display: none; }
-        .todo-list li label { position: relative; padding-left: 30px; line-height: 1.5; }
-        .todo-list li label::before { content: ''; position: absolute; left: 0; top: 2px; width: 20px; height: 20px; border: 2px solid var(--accent-color); border-radius: 4px; background-color: transparent; transition: all 0.2s; }
-        .todo-list li input:checked + label::after { content: '✔'; position: absolute; left: 4px; top: 0; font-size: 16px; color: var(--accent-color); }
-        .todo-list li input:checked + label { text-decoration: line-through; color: #888; }
-        .chat-container { display: flex; flex-direction: column; width: 100%; height: 250px; }
-        #chat-window { flex-grow: 1; overflow-y: auto; padding: 10px; border-bottom: 1px solid #555; margin-bottom: 10px; }
-        .chat-message { display: flex; margin-bottom: 10px; max-width: 85%; }
-        .chat-message .bubble { padding: 10px 15px; border-radius: 18px; line-height: 1.5; }
-        .chat-message.user { justify-content: flex-end; margin-left: auto; }
-        .chat-message.user .bubble { background-color: var(--accent-color); color: #1a1029; border-bottom-right-radius: 4px; }
-        .chat-message.lillia { justify-content: flex-start; margin-right: auto; }
-        .chat-message.lillia .bubble { background-color: #4a4058; border-bottom-left-radius: 4px; }
-        .suggestion-card { background: rgba(0,0,0,0.3); border-radius: 12px; padding: 15px; margin-top: 10px; border-left: 3px solid var(--accent-color); }
-        .suggestion-card h4 { font-size: 0.9rem; color: var(--accent-color); margin-bottom: 10px; }
-        .suggestion-card ul { list-style: none; padding-left: 0; margin-bottom: 15px; }
-        .suggestion-card li { font-size: 0.9rem; margin-bottom: 5px; }
-        .btn-accept { width: 100%; padding: 8px; font-size: 0.9rem; }
-        .btn-accept:disabled { background-color: #333; color: #777; cursor: not-allowed; }
-        #chat-input-area { display: flex; gap: 10px; }
-        #llm-input { flex-grow: 1; background: rgba(0,0,0,0.3); border: 1px solid #555; border-radius: 20px; color: var(--text-color); padding: 10px 15px; font-size: 1rem; }
-        #llm-send-btn { width: 50px; height: 44px; border-radius: 50%; border: none; background-color: var(--accent-color); color: #1a1029; font-size: 1.5rem; cursor: pointer; flex-shrink: 0; }
-        #llm-counter { font-size: 0.8rem; color: #aaa; text-align: center; width: 100%; margin-top: 5px; }
-        .ad-space { width: 90%; height: 60px; background: #111; border: 2px dashed #444; display: flex; justify-content: center; align-items: center; color: #666; margin-top: 15px; align-self: center; flex-shrink: 0; }
-    </style>
+/* pile hint labels for cutting */
+.pile-tag{ position:absolute; left:50%; top:-42px; transform:translateX(-50%);
+  font-family:Cinzel,serif; color:var(--gold-dim); font-size:15px; letter-spacing:.2em;
+  opacity:0; transition:opacity .4s .35s; pointer-events:none; white-space:nowrap; }
+#stage.cut .card.pile-top .pile-tag{ opacity:.95; }
+#stage.cut .card.pile-top:hover .face{ box-shadow:0 12px 30px rgba(0,0,0,.6), 0 0 26px rgba(232,199,111,.4); }
+
+/* action bar */
+#actions{ position:absolute; bottom:calc(env(safe-area-inset-bottom, 0px) + 26px); left:0; right:0;
+  display:flex; justify-content:center; gap:14px; z-index:45; flex-wrap:wrap; padding:0 16px;
+  transition:opacity .4s, transform .4s; }
+#actions.hidden{ opacity:0; pointer-events:none; transform:translateY(14px); }
+#pick-count{ position:absolute; bottom:calc(env(safe-area-inset-bottom, 0px) + 88px); left:0; right:0; text-align:center;
+  font-family:Cinzel,serif; color:var(--gold-dim); letter-spacing:.35em; font-size:13px; opacity:0; transition:opacity .4s; }
+#pick-count.show{ opacity:1; }
+
+/* sparks on reveal */
+.spark{ position:absolute; width:7px; height:7px; pointer-events:none; z-index:80;
+  background:radial-gradient(circle, #fff6d8 0%, var(--gold) 45%, transparent 70%);
+  border-radius:50%; }
+
+/* ---------- reading sheet ---------- */
+#sheet{
+  position:fixed; left:50%; bottom:0; transform:translate(-50%,105%); z-index:50;
+  width:min(680px, calc(100% - 20px));
+  max-height:52%; overflow-y:auto; overscroll-behavior:contain;
+  background:linear-gradient(180deg, rgba(30,22,64,.92), rgba(14,10,32,.96));
+  border:1px solid rgba(232,199,111,.35); border-bottom:none; border-radius:22px 22px 0 0;
+  backdrop-filter:blur(14px); padding:16px 22px calc(env(safe-area-inset-bottom, 0px) + 18px);
+  box-shadow:0 -18px 60px rgba(0,0,0,.55);
+  transition:transform .7s cubic-bezier(.3,1,.3,1);
+}
+#sheet.show{ transform:translate(-50%,0); }
+#sheet::-webkit-scrollbar{ width:4px } #sheet::-webkit-scrollbar-thumb{ background:rgba(232,199,111,.3); border-radius:2px }
+.sheet-handle{ width:44px; height:4px; border-radius:2px; background:rgba(232,199,111,.4); margin:0 auto 14px; }
+.reading{ padding:6px 0 14px; }
+.reading + .reading{ border-top:1px dashed rgba(232,199,111,.22); padding-top:16px; }
+.r-pos{ font-size:12px; letter-spacing:.4em; text-indent:.4em; color:var(--gold-dim); text-align:center; margin-bottom:6px; }
+.r-head{ display:flex; align-items:baseline; justify-content:center; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+.r-name{ font-size:22px; font-weight:700; letter-spacing:.14em; color:var(--ink); }
+.r-en{ font-family:Cinzel,serif; font-size:12px; letter-spacing:.22em; color:var(--ink-dim); }
+.r-ori{ font-size:11.5px; padding:2.5px 10px; border-radius:999px; letter-spacing:.2em; text-indent:.2em; }
+.r-ori.up{ color:#ffe9ad; border:1px solid rgba(232,199,111,.55); background:rgba(232,199,111,.12); }
+.r-ori.rev{ color:#c9b6ff; border:1px solid rgba(156,124,255,.5); background:rgba(124,92,220,.14); }
+.r-kws{ display:flex; justify-content:center; gap:8px; flex-wrap:wrap; margin:10px 0 12px; }
+.r-kw{ font-size:12px; color:var(--gold-dim); border:1px solid rgba(232,199,111,.3); border-radius:999px;
+  padding:3px 12px; letter-spacing:.15em; background:rgba(232,199,111,.05); }
+.r-text{ font-size:14.5px; line-height:1.95; color:var(--ink); text-align:justify; letter-spacing:.04em; }
+.r-adv{ margin-top:12px; font-size:13.5px; line-height:1.8; color:var(--gold-dim); text-align:center;
+  padding:10px 14px; border-radius:12px; background:rgba(232,199,111,.06); letter-spacing:.06em; }
+.r-adv b{ color:var(--gold); font-weight:600; letter-spacing:.25em; }
+.sheet-btns{ display:flex; justify-content:center; gap:12px; margin-top:6px; padding-top:14px;
+  border-top:1px solid rgba(232,199,111,.18); flex-wrap:wrap; }
+#toast{ position:fixed; left:50%; top:18%; transform:translate(-50%,-8px); z-index:99;
+  background:rgba(20,15,45,.9); border:1px solid rgba(232,199,111,.5); color:var(--ink);
+  font-size:13.5px; letter-spacing:.2em; padding:10px 22px; border-radius:999px;
+  opacity:0; pointer-events:none; transition:all .4s; backdrop-filter:blur(8px); }
+#toast.show{ opacity:1; transform:translate(-50%,0); }
+
+/* svg typography */
+text.rn{ font-family:Cinzel,serif; font-size:30px; fill:var(--gold); letter-spacing:3px; }
+text.zh{ font-family:'Noto Serif SC',serif; font-size:34px; font-weight:600; fill:var(--ink); letter-spacing:8px; }
+text.en{ font-family:Cinzel,serif; font-size:14.5px; fill:var(--gold-dim); letter-spacing:3px; }
+
+@media (max-height:620px){
+  .w-sub{ margin-bottom:20px } .spreads{ margin-bottom:20px }
+  #sheet{ max-height:62% }
+}
+</style>
 </head>
 <body>
-    <div class="app-container" id="app-container">
-        <div class="screen" id="screen1">
-            <div id="language-selector">
-                <a class="lang-option" data-lang="zh-CN">中文</a>
-                <a class="lang-option" data-lang="en">EN</a>
-            </div>
-            <button class="cabin-button" id="cabin-button" data-translate-key="cabin-button-title" data-translate-prop="title" title="进入小屋"><svg viewBox="0 0 24 24"><path d="M12 5.69L17 10.19V18H15V12H9V18H7V10.19L12 5.69M12 3L2 12H5V20H11V14H13V20H19V12H22L12 3Z"></path></svg></button>
-            <h1 class="title" data-translate-key="title">每日占卜</h1>
-            <div class="crystal-ball-container" id="crystal-ball-container">
-                <div id="three-canvas-container"></div>
-                <!-- <div class="ball-stand"></div> -->
-                
-            </div>
-            <p class="info-text" id="info-text" data-translate-key="info-text-initial">轻触水晶球，揭示你今日的命运轨迹。</p>
-            
-            <div id="today-card" class="result-card hidden">
-            
-            </div>
-        </div>
-        
-        <div class="screen hidden" id="screen2"><button class="back-button" id="back-button" title="返回">«</button><div class="results-content"><div class="result-card"><h3 data-translate-key="s2-card1-title">你的星辰图谱</h3><div class="signs-display"><div class="sign"><span class="emoji" id="sun-emoji">☀️</span><strong data-translate-key="sun-sign-label">太阳星座</strong> <span class="explanation" data-translate-key="sun-sign-desc">核心自我</span><p id="sun-sign"></p></div><div class="sign"><span class="emoji" id="moon-emoji">🌙</span><strong data-translate-key="moon-sign-label">月亮星座</strong> <span class="explanation" data-translate-key="moon-sign-desc">内在情绪</span><p id="moon-sign"></p></div><div class="sign"><span class="emoji" id="rising-emoji">🌅</span><strong data-translate-key="rising-sign-label">上升星座</strong> <span class="explanation" data-translate-key="rising-sign-desc">社交面具</span><p id="rising-sign"></p></div></div></div><div class="result-card"><h3>通往理想自我的路径</h3><div class="todo-section"><h4>本周指引</h4><ul id="todo-list" class="todo-list"></ul></div><div class="todo-section"><h4>已完成</h4><ul id="completed-list" class="todo-list"></ul></div></div>
-        <div class="result-card"><h3>与莉莉安(Lillia)对话</h3><div class="chat-container"><div id="chat-window"></div><div id="chat-input-area"><input type="text" id="llm-input" placeholder="告诉Lillia你的想法..."><button id="llm-send-btn">➤</button></div></div><p id="llm-counter"></p></div>
-    </div></div>
-        
-        <div id="birthday-form" class="overlay hidden"><div class="form-content"><h2 data-translate-key="birthday-form-title">魔法需要你的诞生时刻</h2><div class="input-group"><input type="date" id="birthdate-input" required><input type="time" id="birthtime-input" required></div><select id="timezone-input"></select><button id="submit-birthday" class="btn-primary" data-translate-key="submit-birthday-btn">确认时刻</button></div></div>
-        <div id="fortune-modal" class="overlay hidden">
-            <div class="modal-content">
-                <h3 data-translate-key="fortune-modal-title">今日运势</h3>
-                <p id="daily-fortune"></p>
-                <div class="lucky-elements">
-                    <div id="lucky-color"></div>
-                    <div id="lucky-number"></div>
-                </div>
-                <button id="close-modal" class="btn-primary" data-translate-key="close-modal-btn">我明白了</button>
-            </div>
-        </div>
-        <button id="install-button" class="bt clasn-primary" data-translate-key="install-button">安装应用</button>
+
+<canvas id="sky"></canvas>
+
+<!-- shared SVG defs: gradients, card back, ornaments -->
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<defs>
+  <radialGradient id="backBg" cx="50%" cy="42%" r="75%">
+    <stop offset="0%" stop-color="#2e2260"/><stop offset="55%" stop-color="#1d1542"/><stop offset="100%" stop-color="#110c28"/>
+  </radialGradient>
+  <linearGradient id="faceBg" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="#1d1742"/><stop offset="60%" stop-color="#141030"/><stop offset="100%" stop-color="#0d0a1f"/>
+  </linearGradient>
+  <radialGradient id="halo" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#e8c76f" stop-opacity=".22"/><stop offset="70%" stop-color="#e8c76f" stop-opacity=".05"/>
+    <stop offset="100%" stop-color="#e8c76f" stop-opacity="0"/>
+  </radialGradient>
+  <pattern id="lat" width="26" height="26" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <path d="M0 0H26M0 13H26" stroke="#8f76c9" stroke-width=".8"/>
+  </pattern>
+  <path id="spark4" d="M0,-8 L1.9,-1.9 L8,0 L1.9,1.9 L0,8 L-1.9,1.9 L-8,0 L-1.9,-1.9 Z" fill="#e8c76f"/>
+  <g id="cornerFleur" fill="none" stroke="#caa85c" stroke-width="2" stroke-linecap="round">
+    <path d="M6 34 Q6 6 34 6"/>
+    <path d="M12 34 Q12 12 34 12" opacity=".55"/>
+    <path d="M15 24 Q24 24 24 15" opacity=".8"/>
+    <circle cx="29" cy="29" r="2.4" fill="#caa85c" stroke="none"/>
+  </g>
+
+  <!-- ====== THE CARD BACK ====== -->
+  <g id="cardBack">
+    <rect width="300" height="500" fill="url(#backBg)"/>
+    <rect x="20" y="20" width="260" height="460" fill="url(#lat)" opacity=".22"/>
+    <rect x="11" y="11" width="278" height="478" rx="12" fill="none" stroke="#caa85c" stroke-width="2.5"/>
+    <rect x="20" y="20" width="260" height="460" rx="7" fill="none" stroke="#caa85c" stroke-width="1" opacity=".55"/>
+    <use href="#cornerFleur" transform="translate(24,24)"/>
+    <use href="#cornerFleur" transform="translate(276,24) scale(-1,1)"/>
+    <use href="#cornerFleur" transform="translate(24,476) scale(1,-1)"/>
+    <use href="#cornerFleur" transform="translate(276,476) scale(-1,-1)"/>
+    <!-- moon-phase rows -->
+    <g fill="none" stroke="#caa85c" stroke-width="1.4">
+      <circle cx="110" cy="52" r="6" fill="#caa85c"/>
+      <path d="M136 46 a6 6 0 0 0 0 12 a8.5 8.5 0 0 1 0 -12 Z" fill="#caa85c" stroke="none"/>
+      <circle cx="150" cy="52" r="7"/>
+      <path d="M164 46 a6 6 0 0 1 0 12 a8.5 8.5 0 0 0 0 -12 Z" fill="#caa85c" stroke="none"/>
+      <circle cx="190" cy="52" r="6" fill="#caa85c"/>
+    </g>
+    <g fill="none" stroke="#caa85c" stroke-width="1.4" transform="translate(0,896) scale(1,-1)">
+      <circle cx="110" cy="52" r="6" fill="#caa85c"/>
+      <path d="M136 46 a6 6 0 0 0 0 12 a8.5 8.5 0 0 1 0 -12 Z" fill="#caa85c" stroke="none"/>
+      <circle cx="150" cy="52" r="7"/>
+      <path d="M164 46 a6 6 0 0 1 0 12 a8.5 8.5 0 0 0 0 -12 Z" fill="#caa85c" stroke="none"/>
+      <circle cx="190" cy="52" r="6" fill="#caa85c"/>
+    </g>
+    <!-- central mandala -->
+    <g transform="translate(150,250)" fill="none" stroke="#e8c76f">
+      <circle r="103" stroke-width="1.1" opacity=".8"/>
+      <circle r="96" stroke-width="3" stroke-dasharray="1 7" stroke-linecap="round" opacity=".9"/>
+      <rect x="-60" y="-60" width="120" height="120" stroke-width="1.5" opacity=".85"/>
+      <rect x="-60" y="-60" width="120" height="120" stroke-width="1.5" opacity=".85" transform="rotate(45)"/>
+      <circle r="48" fill="#160f38" stroke-width="1.6"/>
+      <circle r="42" stroke-width=".8" opacity=".5"/>
+      <!-- crescent cradling a star -->
+      <path d="M8,-30 A31 31 0 1 0 8,30 A24.5 24.5 0 1 1 8,-30 Z" fill="#e8c76f" stroke="none" opacity=".95"/>
+      <use href="#spark4" transform="translate(13,0) scale(1.5)"/>
+      <!-- dots around inner circle -->
+      <g fill="#e8c76f" stroke="none" opacity=".9">
+        <circle cx="0" cy="-72" r="2.6"/><circle cx="0" cy="72" r="2.6"/>
+        <circle cx="-72" cy="0" r="2.6"/><circle cx="72" cy="0" r="2.6"/>
+        <circle cx="51" cy="-51" r="2"/><circle cx="-51" cy="-51" r="2"/>
+        <circle cx="51" cy="51" r="2"/><circle cx="-51" cy="51" r="2"/>
+      </g>
+    </g>
+    <!-- scattered sparkles -->
+    <use href="#spark4" transform="translate(56,120) scale(.8)" opacity=".85"/>
+    <use href="#spark4" transform="translate(244,132) scale(.6)" opacity=".7"/>
+    <use href="#spark4" transform="translate(60,382) scale(.6)" opacity=".7"/>
+    <use href="#spark4" transform="translate(240,372) scale(.8)" opacity=".85"/>
+    <use href="#spark4" transform="translate(150,140) scale(.5)" opacity=".55"/>
+    <use href="#spark4" transform="translate(150,362) scale(.5)" opacity=".55"/>
+  </g>
+
+  <!-- ritual circle (table decoration) -->
+  <g id="ritualCircle" fill="none" stroke="#e8c76f">
+    <circle cx="300" cy="300" r="292" stroke-width="1" opacity=".5"/>
+    <circle cx="300" cy="300" r="272" stroke-width="2.5" stroke-dasharray="1 10" stroke-linecap="round" opacity=".6"/>
+    <circle cx="300" cy="300" r="216" stroke-width="1" opacity=".35"/>
+    <g font-size="26" fill="#caa85c" stroke="none" opacity=".8" font-family="serif" text-anchor="middle">
+      <text x="300" y="52">☉</text><text x="300" y="566">☽</text>
+      <text x="44" y="310">♁</text><text x="556" y="310">☿</text>
+      <text x="120" y="130">♃</text><text x="484" y="130">♀</text>
+      <text x="120" y="492">♄</text><text x="484" y="492">♂</text>
+    </g>
+  </g>
+</defs>
+</svg>
+
+<button id="sound-toggle" title="音效">♪</button>
+
+<div id="app">
+
+  <!-- WELCOME -->
+  <section id="welcome" class="screen">
+    <svg class="w-emblem" viewBox="0 0 120 120" fill="none">
+      <circle cx="60" cy="60" r="44" stroke="#caa85c" stroke-width="1" opacity=".6"/>
+      <circle cx="60" cy="60" r="52" stroke="#caa85c" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity=".7"/>
+      <path d="M72,26 A38 38 0 1 0 72,94 A30 30 0 1 1 72,26 Z" fill="#e8c76f"/>
+      <use href="#spark4" transform="translate(78,60) scale(1.6)"/>
+      <use href="#spark4" transform="translate(95,32) scale(.8)"/>
+      <use href="#spark4" transform="translate(28,90) scale(.7)"/>
+    </svg>
+    <div class="w-title-en">DAILY&nbsp;TAROT</div>
+    <h1 class="w-title">每日塔罗</h1>
+    <div class="w-divider">✦</div>
+    <p class="w-sub">静心凝神 · 让命运之牌为今日引路</p>
+    <div class="spreads">
+      <div class="spread-opt on" data-n="1">
+        <div class="so-cards"><i></i></div>
+        <div class="so-name">今日指引</div>
+        <div class="so-desc">抽取一张 · today's card</div>
+      </div>
+      <div class="spread-opt" data-n="3">
+        <div class="so-cards"><i></i><i></i><i></i></div>
+        <div class="so-name">时之牌阵</div>
+        <div class="so-desc">过去 · 现在 · 未来</div>
+      </div>
     </div>
+    <button class="btn primary" id="btn-start">开启占卜</button>
+    <button id="today-chip" style="display:none">✦ 今日已留下指引，点此回顾 ✦</button>
+  </section>
 
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { RGBELoader } from 'three/addons/loaders/RGBELoader.js';
+  <!-- TABLE -->
+  <section id="table" class="screen hidden">
+    <div id="hint"></div>
+    <svg id="ritual" viewBox="0 0 600 600"><use href="#ritualCircle"/></svg>
+    <div id="deck-glow"></div>
+    <div id="stage"></div>
+    <div id="pick-count"></div>
+    <div id="actions" class="hidden"></div>
+  </section>
 
-        let particleRadiusMultiplier = 1.0;
-        let targetParticleRadiusMultiplier = 1.0;
+</div>
 
-        let scene, camera, renderer, controls;
-        let crystalBall, particleSystem;
-        let singleSmokeWisp;
-        
-        let originalParticlePositions;
-        const clock = new THREE.Clock();
-        let container;
+<!-- READING SHEET -->
+<aside id="sheet"><div class="sheet-handle"></div><div id="sheet-body"></div></aside>
+<div id="toast"></div>
 
-        function init3D() {
-            container = document.getElementById('three-canvas-container');
-            if (!container) {
-                console.error("3D container not found!");
-                return;
-            }
-            scene = new THREE.Scene();
-            camera = new THREE.PerspectiveCamera(60, container.clientWidth / container.clientHeight, 0.1, 1000);
-            camera.position.z = 3.8;
+<script>
+"use strict";
+/* ============================================================
+   每日塔罗 — Major Arcana data (22 cards)
+   ============================================================ */
+const ART = [
+/*0 愚者*/ `<circle cx="152" cy="42" r="18"/><path d="M152 12v10M152 62v10M122 42h10M172 42h10M131 21l7 7M166 56l7 7M173 21l-7 7M138 56l-7 7" stroke-width="2"/>
+<path d="M36 168 C36 120 78 96 104 108 C132 120 128 158 100 160 C80 161 72 142 86 132" />
+<circle cx="90" cy="128" r="4" fill="#e8c76f" stroke="none"/>
+<use href="#spark4" transform="translate(52,80) scale(.8)"/><use href="#spark4" transform="translate(160,150) scale(.6)"/>`,
+/*1 魔术师*/ `<path d="M62 46 C62 30 94 30 100 46 C106 62 138 62 138 46 C138 30 106 30 100 46 C94 62 62 62 62 46 Z" stroke-width="2.4"/>
+<path d="M100 74 V150"/><circle cx="100" cy="70" r="4.5" fill="#e8c76f" stroke="none"/><circle cx="100" cy="154" r="4.5" fill="#e8c76f" stroke="none"/>
+<path d="M40 176 H160" stroke-width="2.4"/>
+<circle cx="56" cy="164" r="7"/><path d="M84 158 a8 8 0 0 0 16 0 M92 166 v6" stroke-width="2"/><path d="M124 156 v16 M118 160 h12" stroke-width="2"/><circle cx="148" cy="164" r="7"/><path d="M148 158 l2 4 4 0 -3 3 1 5 -4 -3 -4 3 1 -5 -3 -3 4 0 Z" fill="#e8c76f" stroke="none"/>`,
+/*2 女祭司*/ `<path d="M42 40 V168 M30 40 H54 M32 168 H52" stroke-width="2.6"/><path d="M158 40 V168 M146 40 H170 M148 168 H168" stroke-width="2.6"/>
+<path d="M112,58 A42 42 0 1 0 112,134 A32 32 0 1 1 112,58 Z" fill="#e8c76f" stroke="none" opacity=".92"/>
+<path d="M60 178 Q100 160 140 178" stroke-width="2" opacity=".7"/>
+<use href="#spark4" transform="translate(100,26) scale(.7)"/>`,
+/*3 女皇*/ `<circle cx="100" cy="72" r="34" stroke-width="2.6"/><path d="M100 106 V162 M78 136 H122" stroke-width="2.6"/>
+<path d="M40 170 Q46 120 66 96" opacity=".8"/><path d="M46 150 l-10 -4 M52 130 l-10 -6 M60 112 l-9 -8" stroke-width="2"/>
+<path d="M160 170 Q154 120 134 96" opacity=".8"/><path d="M154 150 l10 -4 M148 130 l10 -6 M140 112 l9 -8" stroke-width="2"/>
+<use href="#spark4" transform="translate(100,72) scale(1)"/>`,
+/*4 皇帝*/ `<rect x="52" y="64" width="96" height="96" stroke-width="2.6"/><circle cx="100" cy="112" r="30" stroke-width="2"/>
+<path d="M52 64 C36 60 30 42 44 34 C56 27 66 38 58 48" stroke-width="2.4"/>
+<path d="M148 64 C164 60 170 42 156 34 C144 27 134 38 142 48" stroke-width="2.4"/>
+<path d="M100 96 V128 M88 112 H112" stroke-width="2.4"/><circle cx="100" cy="112" r="3" fill="#e8c76f" stroke="none"/>`,
+/*5 教皇*/ `<path d="M100 30 V158" stroke-width="2.6"/><path d="M76 56 H124 M70 82 H130 M64 108 H136" stroke-width="2.4"/>
+<path d="M30 40 Q100 -14 170 40" opacity=".6"/>
+<g stroke-width="2"><circle cx="72" cy="168" r="9"/><path d="M80 162 L118 140 M108 146 l4 7 M114 142 l4 7"/>
+<circle cx="128" cy="168" r="9"/><path d="M120 162 L82 140 M92 146 l-4 7 M86 142 l-4 7"/></g>`,
+/*6 恋人*/ `<circle cx="100" cy="42" r="16"/><path d="M100 18v-8M100 74v-8M76 42h-8M132 42h-8M83 25l-6-6M123 65l-6-6M117 25l6-6M89 65l6-6" stroke-width="2"/>
+<circle cx="76" cy="124" r="34" stroke-width="2.4"/><circle cx="124" cy="124" r="34" stroke-width="2.4"/>
+<path d="M100 118 c-6 -9 -19 -4 -16 6 c2 8 12 12 16 16 c4 -4 14 -8 16 -16 c3 -10 -10 -15 -16 -6 Z" fill="#e8c76f" stroke="none"/>`,
+/*7 战车*/ `<rect x="46" y="76" width="108" height="66" stroke-width="2.6"/><path d="M46 76 L60 46 H140 L154 76" stroke-width="2.4"/>
+<use href="#spark4" transform="translate(78,61) scale(.7)"/><use href="#spark4" transform="translate(100,58) scale(.9)"/><use href="#spark4" transform="translate(122,61) scale(.7)"/>
+<g stroke-width="2.2"><circle cx="70" cy="160" r="16"/><path d="M70 146v28M56 160h28M60 150l20 20M80 150l-20 20"/>
+<circle cx="130" cy="160" r="16"/><path d="M130 146v28M116 160h28M120 150l20 20M140 150l-20 20"/></g>`,
+/*8 力量*/ `<path d="M62 36 C62 22 90 22 96 36 C102 50 130 50 130 36 C130 22 102 22 96 36 C90 50 62 50 62 36 Z" stroke-width="2.2"/>
+<circle cx="100" cy="112" r="34" stroke-width="2.6"/>
+<path d="M100 70 l4 -12 M78 78 l-4 -12 M122 78 l4 -12 M64 98 l-12 -6 M136 98 l12 -6 M64 128 l-12 6 M136 128 l12 6 M82 142 l-6 11 M118 142 l6 11 M100 146 l0 12" stroke-width="2"/>
+<path d="M58 168 Q100 186 142 168" stroke-width="2.4"/>
+<circle cx="88" cy="106" r="2.5" fill="#e8c76f" stroke="none"/><circle cx="112" cy="106" r="2.5" fill="#e8c76f" stroke="none"/><path d="M92 122 Q100 128 108 122" stroke-width="2"/>`,
+/*9 隐士*/ `<path d="M100 30 L128 46 V82 L100 98 L72 82 V46 Z" stroke-width="2.4"/>
+<path d="M100 44 l6 10 12 0 -9 9 3 13 -12 -7 -12 7 3 -13 -9 -9 12 0 Z" fill="#e8c76f" stroke="none"/>
+<path d="M100 98 V150" stroke-width="2.2"/>
+<path d="M28 178 L64 128 L88 160 L118 112 L172 178" stroke-width="2.4"/>
+<use href="#spark4" transform="translate(150,60) scale(.6)"/>`,
+/*10 命运之轮*/ `<circle cx="100" cy="104" r="62" stroke-width="2.6"/><circle cx="100" cy="104" r="44" stroke-width="1.4" opacity=".7"/>
+<path d="M100 42 v124 M38 104 h124 M56 60 l88 88 M144 60 l-88 88" stroke-width="1.8"/>
+<circle cx="100" cy="104" r="10" fill="#e8c76f" stroke="none"/>
+<path d="M100 24 l7 12 h-14 Z M100 184 l-7 -12 h14 Z M20 104 l12 -7 v14 Z M180 104 l-12 7 v-14 Z" fill="#e8c76f" stroke="none"/>`,
+/*11 正义*/ `<path d="M100 34 V150 M92 150 H108 M100 34 l-6 12 h12 Z" stroke-width="2.4"/>
+<path d="M40 62 H160" stroke-width="2.6"/>
+<path d="M56 62 v10 M40 92 a16 16 0 0 0 32 0 Z M56 72 l-14 20 M56 72 l14 20" stroke-width="2"/>
+<path d="M144 62 v10 M128 92 a16 16 0 0 0 32 0 Z M144 72 l-14 20 M144 72 l14 20" stroke-width="2"/>
+<circle cx="100" cy="62" r="6" fill="#e8c76f" stroke="none"/>`,
+/*12 倒吊人*/ `<path d="M48 36 H152 M64 36 V60 M136 36 V60" stroke-width="2.6"/>
+<path d="M100 36 V78" stroke-width="2.2"/>
+<path d="M100 78 L74 122 H126 Z" stroke-width="2.4"/>
+<circle cx="100" cy="140" r="16" stroke-width="2.4"/>
+<circle cx="100" cy="140" r="26" stroke-width="1.2" opacity=".6" stroke-dasharray="2 5"/>
+<use href="#spark4" transform="translate(100,140) scale(.8)"/>`,
+/*13 死神*/ `<path d="M100 92 m-30,0 a30,30 0 1,1 60,0 a30,30 0 1,1 -60,0" stroke-width="2.2"/>
+<path d="M100 92 m-18,0 a18,18 0 1,1 36,0 a18,18 0 1,1 -36,0" stroke-width="1.6" opacity=".75"/>
+<path d="M100 92 m-7,0 a7,7 0 1,1 14,0 a7,7 0 1,1 -14,0" stroke-width="1.4" opacity=".6"/>
+<path d="M100 122 V168 M100 138 C86 132 80 138 78 146 M100 148 C114 142 120 148 122 156" stroke-width="2.2"/>
+<path d="M30 178 H170" stroke-width="2"/><path d="M64 178 a36 36 0 0 1 72 0" stroke-width="2.4"/>`,
+/*14 节制*/ `<circle cx="100" cy="48" r="22" stroke-width="2.2"/><path d="M100 32 L114 58 H86 Z" stroke-width="2"/>
+<path d="M40 108 h36 l-5 44 h-26 Z" stroke-width="2.4"/><path d="M124 108 h36 l-5 44 h-26 Z" stroke-width="2.4"/>
+<path d="M76 112 C96 118 104 134 124 118" stroke-width="2"/><path d="M80 120 C98 128 106 142 120 128" stroke-width="1.6" opacity=".7"/>
+<use href="#spark4" transform="translate(100,86) scale(.6)"/>`,
+/*15 恶魔*/ `<circle cx="100" cy="96" r="58" stroke-width="2.4"/>
+<path d="M100 141 L73.6 59.6 L142.8 109.9 L57.2 109.9 L126.4 59.6 Z" stroke-width="2.2"/>
+<path d="M52 48 C40 34 44 20 58 22 M148 48 C160 34 156 20 142 22" stroke-width="2.4"/>
+<g stroke-width="2"><circle cx="80" cy="172" r="8"/><circle cx="94" cy="172" r="8"/><circle cx="108" cy="172" r="8"/><circle cx="122" cy="172" r="8"/></g>`,
+/*16 高塔*/ `<path d="M72 176 V64 H128 V176" stroke-width="2.6"/><path d="M64 64 H136 M72 64 V50 H86 V64 M94 64 V50 H108 V64 M116 64 V50 H128 V64" stroke-width="2.2"/>
+<path d="M160 20 L120 62 L138 66 L96 118" stroke-width="2.6"/>
+<path d="M84 40 L70 26 M64 46 l-12 -6 M150 84 l14 8 M146 102 l12 12" stroke-width="2"/>
+<path d="M88 176 v-28 h24 v28" stroke-width="2"/>`,
+/*17 星星*/ `<g fill="#e8c76f" stroke="none"><path d="M100,28 L107,63 L142,70 L107,77 L100,112 L93,77 L58,70 L93,63 Z"/></g>
+<use href="#spark4" transform="translate(48,40) scale(.75)"/><use href="#spark4" transform="translate(152,40) scale(.75)"/>
+<use href="#spark4" transform="translate(30,86) scale(.6)"/><use href="#spark4" transform="translate(170,86) scale(.6)"/>
+<use href="#spark4" transform="translate(58,120) scale(.55)"/><use href="#spark4" transform="translate(142,120) scale(.55)"/><use href="#spark4" transform="translate(100,10) scale(.5)"/>
+<path d="M84 128 C80 146 84 158 78 172 M116 128 C120 146 116 158 122 172" stroke-width="2"/>
+<path d="M36 178 q16 -9 32 0 t32 0 t32 0 t32 0" stroke-width="2.2"/>`,
+/*18 月亮*/ `<path d="M118,34 A50 50 0 1 0 118,126 A38 38 0 1 1 118,34 Z" fill="#e8c76f" stroke="none" opacity=".95"/>
+<path d="M60 116 l-3 12 M100 128 l0 12 M78 124 l-2 12" stroke-width="2" opacity=".8"/>
+<path d="M30 178 V150 H46 V178 M154 178 V150 H170 V178 M30 150 l8 -10 8 10 M154 150 l8 -10 8 10" stroke-width="2.2"/>
+<path d="M56 178 Q100 156 144 178" stroke-width="2" stroke-dasharray="4 6"/>`,
+/*19 太阳*/ `<circle cx="100" cy="92" r="34" stroke-width="2.6"/>
+<path d="M100 40 V16 M100 144 V168 M48 92 H24 M176 92 H152" stroke-width="2.2"/>
+<path d="M64 56 q-8 -2 -12 -12 M136 56 q8 -2 12 -12 M64 128 q-8 2 -12 12 M136 128 q8 2 12 12" stroke-width="2.2"/>
+<path d="M76 32 l-6 -14 M124 32 l6 -14 M76 152 l-6 14 M124 152 l6 14" stroke-width="1.8" opacity=".8"/>
+<circle cx="88" cy="86" r="2.5" fill="#e8c76f" stroke="none"/><circle cx="112" cy="86" r="2.5" fill="#e8c76f" stroke="none"/>
+<path d="M88 102 Q100 110 112 102" stroke-width="2"/>
+<path d="M40 184 q20 -12 40 0 t40 0 t40 0" stroke-width="2.2"/>`,
+/*20 审判*/ `<path d="M36 60 L128 34 V54 L36 80 Z" stroke-width="2.2"/>
+<path d="M128 24 V64 M128 24 h34 v22 l-12 -6 -12 6 v-16" stroke-width="2.2"/>
+<path d="M36 92 l-10 10 M52 96 l-8 12 M68 100 l-6 13" stroke-width="2"/>
+<path d="M52 178 a14 14 0 0 1 28 0 M86 178 a14 14 0 0 1 28 0 M120 178 a14 14 0 0 1 28 0" stroke-width="2.4"/>
+<path d="M66 158 v-10 M100 158 v-14 M134 158 v-10" stroke-width="2"/>`,
+/*21 世界*/ `<ellipse cx="100" cy="100" rx="58" ry="74" stroke-width="2.4"/>
+<path d="M64 44 l-9 -7 M52 66 l-11 -4 M46 92 l-12 -1 M46 118 l-12 2 M52 142 l-11 5 M64 164 l-9 7" stroke-width="2"/>
+<path d="M136 44 l9 -7 M148 66 l11 -4 M154 92 l12 -1 M154 118 l12 2 M148 142 l11 5 M136 164 l9 7" stroke-width="2"/>
+<use href="#spark4" transform="translate(100,100) scale(2.4)"/>
+<use href="#spark4" transform="translate(100,58) scale(.7)"/><use href="#spark4" transform="translate(100,142) scale(.7)"/>
+<use href="#spark4" transform="translate(70,100) scale(.7)"/><use href="#spark4" transform="translate(130,100) scale(.7)"/>`
+];
 
-            renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-            renderer.setSize(container.clientWidth, container.clientHeight);
-            renderer.setPixelRatio(window.devicePixelRatio);
-            renderer.setClearColor(0x000000, 0);
-            renderer.toneMapping = THREE.ACESFilmicToneMapping;
-            renderer.toneMappingExposure = 0.8;
-            container.appendChild(renderer.domElement);
-            
-            new RGBELoader()
-                .load('https://raw.githubusercontent.com/ivywsw555/FortuneTell/main/1k.hdr', function (texture) {
-                    texture.mapping = THREE.EquirectangularReflectionMapping;
-                    scene.environment = texture;
-                });
+const CARDS = [
+{zh:"愚者", en:"The Fool", rn:"0", kw:["新的开始","自由","纯真"], rkw:["鲁莽","迷茫","踌躇不前"],
+ up:"愚者踏上未知的旅程，行囊很轻、心却很满。今天适合放下顾虑，去尝试那件你一直想做却没做的事。世界会温柔接住勇敢的人。",
+ rev:"逆位的愚者提醒你：热情虽好，也别忘了看清脚下。今天做决定前多想一步，避免因一时冲动而绕远路。",
+ adv:"带着好奇出发，比带着答案出发更重要。"},
+{zh:"魔术师", en:"The Magician", rn:"I", kw:["创造","行动力","心想事成"], rkw:["犹豫","才华未展","分心"],
+ up:"你手中已握有所需的一切资源。今天灵感与行动力俱佳，是启动新计划、表达自我、谈成事情的黄金时机。",
+ rev:"能量有些散乱，想法很多却难以落地。今天试着只专注一件事，把它做完，胜过十件半途而废。",
+ adv:"意念所至，能量随行——先开口，先动手。"},
+{zh:"女祭司", en:"The High Priestess", rn:"II", kw:["直觉","静观","内在智慧"], rkw:["忽视直觉","焦躁","秘密"],
+ up:"答案不在外界的喧嚣里，而在你安静下来的心中。今天请多倾听直觉，它比逻辑更早知道真相。",
+ rev:"你可能一直在压抑内心的声音。今天留一段独处时间，问问自己真正想要什么，再做回应。",
+ adv:"少说，多听；少刷，多想。"},
+{zh:"女皇", en:"The Empress", rn:"III", kw:["丰盛","滋养","美与爱"], rkw:["过度付出","依赖","停滞"],
+ up:"女皇带来丰盛与温柔的能量。今天适合善待自己、经营关系、享受生活中的美好细节，收获会自然到来。",
+ rev:"你是否付出太多而忘了自己？今天请先照顾好自己的需求，爱人先自爱。",
+ adv:"给自己一顿好饭、一束花，或一个早睡的夜晚。"},
+{zh:"皇帝", en:"The Emperor", rn:"IV", kw:["秩序","掌控","责任"], rkw:["固执","高压","失序"],
+ up:"今天适合建立规则与结构：整理计划、明确目标、果断决策。稳固的根基会带来长久的安全感。",
+ rev:"警惕过度控制——对他人，也对自己。今天试着松开紧握的手，留一点弹性给变化。",
+ adv:"先定框架，再谈自由。"},
+{zh:"教皇", en:"The Hierophant", rn:"V", kw:["传承","指引","信念"], rkw:["教条","叛逆","形式主义"],
+ up:"前人的经验里藏着捷径。今天适合向导师请教、学习体系化的知识，或在传统中寻找答案。",
+ rev:"规则不是不能打破，但要想清楚为什么。今天用自己的判断代替盲从，也别为了叛逆而叛逆。",
+ adv:"找一位值得信任的人，听听他的建议。"},
+{zh:"恋人", en:"The Lovers", rn:"VI", kw:["爱","连结","重要选择"], rkw:["犹豫不决","失衡","错过"],
+ up:"心与心的连结在今天格外顺畅。适合表白、和解、深谈，也适合做出跟随内心的重要选择。",
+ rev:"面对选择迟迟下不了决心？逆位恋人提醒你：拖延本身也是一种选择，而且往往是最差的那种。",
+ adv:"选择你心里早已偏向的那个答案。"},
+{zh:"战车", en:"The Chariot", rn:"VII", kw:["胜利","意志","全速前进"], rkw:["失控","方向不明","内耗"],
+ up:"胜利属于目标明确的人。今天动力十足，认准方向全力冲刺，阻碍会为你让路。",
+ rev:"油门踩满却不知开向哪里？今天先停一停，确认方向，再重新出发。",
+ adv:"目标写下来，然后只看路，不看观众。"},
+{zh:"力量", en:"Strength", rn:"VIII", kw:["勇气","温柔的坚定","耐心"], rkw:["自我怀疑","急躁","逞强"],
+ up:"真正的力量是温柔而坚定的。今天面对难题不必硬碰硬，以柔克刚、以耐心驯服烦躁，你能赢。",
+ rev:"感觉底气不足？其实你比自己以为的强大。今天从一件小事开始重建信心。",
+ adv:"深呼吸，微笑，然后不动声色地搞定它。"},
+{zh:"隐士", en:"The Hermit", rn:"IX", kw:["独处","内省","智慧之光"], rkw:["孤立","逃避","过度封闭"],
+ up:"喧嚣之外，自有答案。今天适合独处、复盘、深度思考，你的提灯会照亮下一段路。",
+ rev:"独处是充电，不是逃避。如果你已经躲了太久，今天试着主动联系一位朋友。",
+ adv:"关掉通知一小时，与自己开个会。"},
+{zh:"命运之轮", en:"Wheel of Fortune", rn:"X", kw:["转机","好运","顺势而为"], rkw:["时运不济","抗拒变化","循环"],
+ up:"命运之轮正在转动，意外的好消息、巧合与机遇将至。顺势而为，抓住那个突然出现的机会。",
+ rev:"低谷只是轮回的一段弧线。今天不必强求结果，把能控制的做好，等风向转变。",
+ adv:"对突如其来的变化说一声「好」。"},
+{zh:"正义", en:"Justice", rn:"XI", kw:["公正","真相","因果"], rkw:["偏颇","失衡","逃避责任"],
+ up:"种什么因，得什么果。今天适合处理合约、谈判、做需要公平判断的决定——事实站在诚实的人一边。",
+ rev:"警惕自我合理化。今天诚实面对自己的责任，该道歉道歉，该纠正纠正，账要平。",
+ adv:"做对的事，而不是容易的事。"},
+{zh:"倒吊人", en:"The Hanged Man", rn:"XII", kw:["换个角度","暂停","放手"], rkw:["无谓牺牲","僵持","拖延"],
+ up:"卡住的时候，不妨倒过来看。今天的「停滞」其实是宇宙请你换个视角，答案会在放松时浮现。",
+ rev:"你是否为不值得的事困住了自己？今天该止损就止损，放手不是失败，是腾出双手。",
+ adv:"把问题讲给外行听，往往豁然开朗。"},
+{zh:"死神", en:"Death", rn:"XIII", kw:["结束与新生","蜕变","断舍离"], rkw:["抗拒改变","拖着不放","停滞"],
+ up:"一段旧章节正在合上，为的是让新篇开启。今天勇敢告别过时的习惯、关系或想法，蜕变已在路上。",
+ rev:"明知该结束却迟迟不放手，消耗的是你自己。今天做一次干脆的了断，轻装前行。",
+ adv:"删掉、扔掉、告别掉——然后你会轻很多。"},
+{zh:"节制", en:"Temperance", rn:"XIV", kw:["平衡","调和","细水长流"], rkw:["失衡","极端","操之过急"],
+ up:"今天的关键词是「刚刚好」。工作与休息、付出与索取、理性与感性，调和得当，诸事顺遂。",
+ rev:"最近是否在某方面用力过猛？逆位节制提醒你回到中间地带，别让一件事吞掉全部生活。",
+ adv:"慢慢来，比较快。"},
+{zh:"恶魔", en:"The Devil", rn:"XV", kw:["欲望","诱惑","直面阴影"], rkw:["挣脱束缚","觉醒","戒断"],
+ up:"诱惑今天格外有魅力——熬夜、拖延、冲动消费或旧习复发。看见欲望，承认它，然后由你做主。",
+ rev:"好消息：锁链正在松动。今天是戒掉坏习惯、离开消耗性关系的绝佳时机，你比想象中自由。",
+ adv:"想要与需要之间，隔着一夜好眠。"},
+{zh:"高塔", en:"The Tower", rn:"XVI", kw:["突变","真相大白","破而后立"], rkw:["余震","侥幸","延迟的崩塌"],
+ up:"突如其来的变动可能打乱计划——但塌掉的都是本就不稳的。别慌，废墟之上才能建起真正坚固的东西。",
+ rev:"你可能一直在勉强维持某个摇摇欲坠的局面。与其等它塌，不如今天主动拆除重建。",
+ adv:"接受计划外的剧情，它往往是更好的剧本。"},
+{zh:"星星", en:"The Star", rn:"XVII", kw:["希望","疗愈","心愿成真"], rkw:["信心不足","悲观","愿望延迟"],
+ up:"风雨之后，星光如约而至。今天充满希望与疗愈的能量，适合许愿、修复关系、重拾梦想。",
+ rev:"星光没有熄灭，只是被云遮住了。今天别急着否定自己，希望比你想的更近。",
+ adv:"写下一个愿望，并为它做一件小事。"},
+{zh:"月亮", en:"The Moon", rn:"XVIII", kw:["直觉","梦境","朦胧不明"], rkw:["迷雾散去","真相浮现","安心"],
+ up:"今天的信息真假难辨，情绪也易被放大。重要决定缓一缓，先让子弹飞一会儿；同时留意梦的提示。",
+ rev:"困扰你的迷雾正在散去，误会将澄清，焦虑将平息。今天可以重新相信自己的判断。",
+ adv:"夜里想不通的事，留给早晨。"},
+{zh:"太阳", en:"The Sun", rn:"XIX", kw:["喜悦","成功","光明正大"], rkw:["小小的延迟","低调的快乐","别骄傲"],
+ up:"整副牌中最灿烂的一张！今天诸事顺遂，自信、活力与好消息同行，尽情发光，也把温暖分给别人。",
+ rev:"阳光仍在，只是隔着一层薄云。成功可能稍稍迟到，但不会缺席，保持热情。",
+ adv:"今天值得庆祝——哪怕只是小小的胜利。"},
+{zh:"审判", en:"Judgement", rn:"XX", kw:["觉醒","召唤","重获新生"], rkw:["自我审判","犹疑","错过召唤"],
+ up:"内心有个声音在召唤你做出改变——这一次，回应它。过往的经验将化为重生的力量。",
+ rev:"别再反复审判过去的自己。今天原谅那个走过弯路的你，然后向前看。",
+ adv:"回应那个你搁置已久的「内心召唤」。"},
+{zh:"世界", en:"The World", rn:"XXI", kw:["圆满","达成","新的循环"], rkw:["差一步","未完成","眷恋过去"],
+ up:"一个循环正圆满落幕：目标达成、旅程完成、努力开花结果。享受这份成就，新的世界已在门外。",
+ rev:"距离圆满只差最后一步，别在终点前松劲。今天把那件99%的事推到100%。",
+ adv:"完成，好过完美。"}
+];
 
-            controls = new OrbitControls(camera, renderer.domElement);
-            controls.enableDamping = true; 
-            controls.dampingFactor = 0.04;
-            controls.screenSpacePanning = false;
-            controls.minDistance = 3;
-            controls.maxDistance = 10;
-            controls.autoRotate = true; 
-            controls.autoRotateSpeed = 0.5;
-            controls.enableZoom = true; 
-            controls.target.set(0, 0, 0);
+/* ============================================================
+   Ambient sky: stars + drifting gold dust
+   ============================================================ */
+(() => {
+  const cv = document.getElementById('sky'), cx = cv.getContext('2d');
+  let W, H, stars = [], dust = [];
+  function size(){
+    W = cv.width = innerWidth * devicePixelRatio; H = cv.height = innerHeight * devicePixelRatio;
+    cv.style.width = innerWidth+'px'; cv.style.height = innerHeight+'px';
+    stars = Array.from({length:130}, () => ({ x:Math.random()*W, y:Math.random()*H, r:(Math.random()*1.3+.4)*devicePixelRatio,
+      p:Math.random()*Math.PI*2, s:.4+Math.random()*1.4 }));
+    dust = Array.from({length:34}, () => ({ x:Math.random()*W, y:Math.random()*H, r:(Math.random()*1.8+.7)*devicePixelRatio,
+      vy:(.08+Math.random()*.22)*devicePixelRatio, vx:(Math.random()-.5)*.12*devicePixelRatio, p:Math.random()*Math.PI*2 }));
+  }
+  size(); addEventListener('resize', size);
+  (function loop(t){
+    requestAnimationFrame(loop);
+    if (document.hidden) return;
+    cx.clearRect(0,0,W,H);
+    for (const s of stars){
+      const a = .25 + .75 * Math.abs(Math.sin(t*.0004*s.s + s.p));
+      cx.globalAlpha = a; cx.fillStyle = '#e8ddff';
+      cx.beginPath(); cx.arc(s.x, s.y, s.r, 0, 7); cx.fill();
+    }
+    for (const d of dust){
+      d.y -= d.vy; d.x += d.vx + Math.sin(t*.001 + d.p)*.15*devicePixelRatio;
+      if (d.y < -8){ d.y = H+8; d.x = Math.random()*W; }
+      cx.globalAlpha = .18 + .2*Math.abs(Math.sin(t*.0011+d.p));
+      cx.fillStyle = '#e8c76f';
+      cx.beginPath(); cx.arc(d.x, d.y, d.r, 0, 7); cx.fill();
+    }
+    cx.globalAlpha = 1;
+  })(0);
+})();
 
-            createCrystalBall();
-            createRepoSmokeEffect();
+/* ============================================================
+   Sound engine (tiny, synthesized — no audio files)
+   ============================================================ */
+const Snd = (() => {
+  let ctx = null, muted = localStorage.getItem('tarot-muted') === '1';
+  const AC = window.AudioContext || window.webkitAudioContext;
+  function ac(){ if (!AC) return null; if (!ctx) ctx = new AC(); if (ctx.state==='suspended') ctx.resume(); return ctx; }
+  function noiseTick(when, freq, gain, dur=.06){
+    const c = ac(); if (!c || muted) return;
+    const t = c.currentTime + when;
+    const len = Math.max(1, (dur*c.sampleRate)|0), buf = c.createBuffer(1, len, c.sampleRate);
+    const d = buf.getChannelData(0);
+    for (let i=0;i<len;i++) d[i] = (Math.random()*2-1) * (1 - i/len);
+    const src = c.createBufferSource(); src.buffer = buf;
+    const bp = c.createBiquadFilter(); bp.type='bandpass'; bp.frequency.value = freq; bp.Q.value = 1.1;
+    const g = c.createGain(); g.gain.setValueAtTime(gain, t); g.gain.exponentialRampToValueAtTime(.0001, t+dur);
+    src.connect(bp).connect(g).connect(c.destination); src.start(t);
+  }
+  function tone(when, freq, gain, dur, type='sine'){
+    const c = ac(); if (!c || muted) return;
+    const t = c.currentTime + when;
+    const o = c.createOscillator(); o.type = type; o.frequency.value = freq;
+    const g = c.createGain();
+    g.gain.setValueAtTime(.0001, t); g.gain.exponentialRampToValueAtTime(gain, t+.02);
+    g.gain.exponentialRampToValueAtTime(.0001, t+dur);
+    o.connect(g).connect(c.destination); o.start(t); o.stop(t+dur+.05);
+  }
+  return {
+    get muted(){ return muted; },
+    toggle(){ muted = !muted; localStorage.setItem('tarot-muted', muted?'1':'0'); return muted; },
+    warm(){ ac(); },
+    riffle(){ for (let k=0;k<12;k++) noiseTick(k*.05 + Math.random()*.018, 1500+Math.random()*2200, .07, .05); },
+    flick(){ noiseTick(0, 2400+Math.random()*800, .06, .045); },
+    slide(){ noiseTick(0, 900+Math.random()*300, .05, .12); },
+    chime(){ tone(0, 784, .10, 1.6); tone(.09, 1175, .085, 1.9); tone(.2, 1568, .05, 2.2); },
+    bell(){ tone(0, 523, .06, .9); tone(.05, 1046, .04, 1.1); }
+  };
+})();
+const buzz = ms => { try{ navigator.vibrate && navigator.vibrate(ms); }catch(e){} };
 
-            createParticles();
-            createLights();
+/* ============================================================
+   Tarot table
+   ============================================================ */
+const $ = s => document.querySelector(s);
+const stage = $('#stage'), hintEl = $('#hint'), actionsEl = $('#actions'),
+      sheet = $('#sheet'), sheetBody = $('#sheet-body'), pickCountEl = $('#pick-count');
 
-            window.addEventListener('resize', onWindowResize, false);
-            onWindowResize(); 
-            animate3D();
-        }
+const state = {
+  phase: 'welcome',        // welcome | deck | cut | fan | reveal
+  spreadN: 1,
+  order: [],               // card indices, deck order (0 = top)
+  els: [],                 // card elements by card index
+  picks: [],               // [{i, rev}]
+  flipped: 0,
+  shuffles: 0,
+  jitter: [],              // per-card resting jitter in the stack
+};
+const POS3 = ['过去 · PAST','现在 · PRESENT','未来 · FUTURE'];
+const todayKey = () => { const d = new Date(); return `tarot-${d.getFullYear()}-${d.getMonth()+1}-${d.getDate()}`; };
 
-        function createCrystalBall() {
-            const geometry = new THREE.SphereGeometry(1.5, 64, 64); 
-            const material = new THREE.MeshPhysicalMaterial({
-                roughness: 0, metalness: 0, transmission: 1.0,
-                ior: 2.0, attenuationColor: 0xf0a6f5, attenuationDistance: 3.8,
-                thickness: 3.5, specularIntensity: 4.0, envMapIntensity: 2.0,
-                color: 0xffffff
-            });
-            crystalBall = new THREE.Mesh(geometry, material);
-            scene.add(crystalBall);
-        }
+function setHint(main, sub=''){ hintEl.innerHTML = main ? `${main}${sub?`<small>${sub}</small>`:''}` : ''; }
+function setActions(list){
+  actionsEl.innerHTML = '';
+  for (const b of list){
+    const el = document.createElement('button');
+    el.className = 'btn' + (b.primary?' primary':'') + (b.ghost?' ghost':'');
+    el.textContent = b.label; el.onclick = b.on;
+    actionsEl.appendChild(el);
+  }
+  actionsEl.classList.toggle('hidden', !list.length);
+}
+function toast(msg){
+  const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+  clearTimeout(toast._t); toast._t = setTimeout(()=>t.classList.remove('show'), 2200);
+}
 
-        function createParticles() {
-            const particleCount = 1000; 
-            const positions = new Float32Array(particleCount * 3);
-            const colors = new Float32Array(particleCount * 3);
-            const baseColor = new THREE.Color(0x4a90e2);
+function faceSVG(i, rev){
+  const c = CARDS[i];
+  return `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="500" fill="url(#faceBg)"/>
+  <g${rev?' transform="rotate(180 150 250)"':''}>
+    <rect x="10" y="10" width="280" height="480" rx="12" fill="none" stroke="#caa85c" stroke-width="2.5"/>
+    <rect x="18" y="18" width="264" height="464" rx="7" fill="none" stroke="#caa85c" stroke-width="1" opacity=".5"/>
+    <use href="#cornerFleur" transform="translate(22,22) scale(.8)"/>
+    <use href="#cornerFleur" transform="translate(278,22) scale(-.8,.8)"/>
+    <use href="#cornerFleur" transform="translate(22,478) scale(.8,-.8)"/>
+    <use href="#cornerFleur" transform="translate(278,478) scale(-.8,-.8)"/>
+    <text x="150" y="58" text-anchor="middle" class="rn">${c.rn}</text>
+    <path d="M104 72 H196 M96 72 l-6 0 M204 72 l6 0" stroke="#caa85c" stroke-width="1" opacity=".6"/>
+    <circle cx="150" cy="240" r="118" fill="url(#halo)"/>
+    <circle cx="150" cy="240" r="112" fill="none" stroke="#caa85c" stroke-width="1" opacity=".45"/>
+    <circle cx="150" cy="240" r="106" fill="none" stroke="#caa85c" stroke-width="2" stroke-dasharray="1 8" stroke-linecap="round" opacity=".5"/>
+    <g transform="translate(50,140)" stroke="#e8c76f" stroke-width="2.6" fill="none" stroke-linecap="round" stroke-linejoin="round">${ART[i]}</g>
+    <path d="M104 398 H196 M96 398 l-6 0 M204 398 l6 0" stroke="#caa85c" stroke-width="1" opacity=".6"/>
+    <text x="150" y="443" text-anchor="middle" class="zh">${c.zh}</text>
+    <text x="150" y="470" text-anchor="middle" class="en">${c.en.toUpperCase()}</text>
+  </g></svg>`;
+}
+const backSVG = `<svg viewBox="0 0 300 500" xmlns="http://www.w3.org/2000/svg"><use href="#cardBack"/></svg>`;
 
-            for (let i = 0; i < particleCount; i++) {
-                const vert = new THREE.Vector3((Math.random() - 0.5), (Math.random() - 0.5), (Math.random() - 0.5))
-                    .normalize().multiplyScalar(Math.random() * 1.4); 
-                positions.set([vert.x, vert.y, vert.z], i * 3);
-                const mixedColor = baseColor.clone().lerp(new THREE.Color(0xd0021b), Math.random() * 0.6);
-                colors.set([mixedColor.r, mixedColor.g, mixedColor.b], i * 3);
-            }
-            
-            originalParticlePositions = new Float32Array(positions);
-            const geometry = new THREE.BufferGeometry();
-            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+function buildDeck(){
+  stage.innerHTML = ''; stage.className = '';
+  state.els = []; state.picks = []; state.flipped = 0; state.shuffles = 0;
+  state.order = CARDS.map((_,i)=>i);
+  // pre-shuffle silently so the fan is never in book order
+  for (let i=state.order.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [state.order[i],state.order[j]]=[state.order[j],state.order[i]]; }
+  state.jitter = CARDS.map(()=>({ x:(Math.random()-.5)*3, y:(Math.random()-.5)*3, r:(Math.random()-.5)*3 }));
+  for (let i=0;i<CARDS.length;i++){
+    const el = document.createElement('div');
+    el.className = 'card'; el.dataset.i = i;
+    el.innerHTML = `<div class="inner">
+        <div class="face back">${backSVG}</div>
+        <div class="face front"></div>
+      </div><div class="pile-tag"></div><div class="slot-tag"></div>`;
+    el.addEventListener('click', () => onCardClick(i));
+    stage.appendChild(el); state.els[i] = el;
+  }
+  layoutDeck(true);
+}
 
-            const material = new THREE.PointsMaterial({
-                size: 0.05, vertexColors: true, blending: THREE.AdditiveBlending,
-                transparent: true, opacity: 0.9, depthWrite: false, 
-            });
+function stageSize(){ const r = stage.getBoundingClientRect(); return { w:r.width, h:r.height }; }
+const T = (x,y,r=0,s=1) => `translate(${x}px, ${y}px) rotate(${r}deg) scale(${s})`;
 
-            particleSystem = new THREE.Points(geometry, material);
-            scene.add(particleSystem);
-        }
+function layoutDeck(instant){
+  const { h } = stageSize();
+  const dy = -h*.02;
+  state.order.forEach((ci, pos) => {
+    const el = state.els[ci], j = state.jitter[ci];
+    if (instant) el.style.transition = 'none';
+    el.style.zIndex = 100 + (state.order.length - pos);
+    el.style.transform = T(j.x, dy + j.y - (state.order.length-pos)*.45, j.r);
+    if (instant){ void el.offsetWidth; el.style.transition = ''; }
+  });
+}
 
-        function createRepoSmokeEffect() {
-            const loader = new THREE.TextureLoader();
-            const smokeTextureUrl = 'https://raw.githubusercontent.com/bobbyroe/Simple-Particle-Effects/master/img/smoke.png';
+/* ---- shuffle: cards burst out both sides, swirl, and re-stack ---- */
+let shuffling = false;
+function doShuffle(){
+  if (shuffling) return;
+  shuffling = true; state.shuffles++;
+  Snd.riffle(); buzz(18);
+  const { w, h } = stageSize();
+  const dy = -h*.02;
+  // real reorder
+  for (let i=state.order.length-1;i>0;i--){ const j=(Math.random()*(i+1))|0; [state.order[i],state.order[j]]=[state.order[j],state.order[i]]; }
+  const spreadX = Math.min(w*.34, 240), spreadY = Math.min(h*.16, 130);
+  let done = 0;
+  state.order.forEach((ci, pos) => {
+    const el = state.els[ci], j = state.jitter[ci];
+    const side = pos % 2 ? 1 : -1;
+    const midX = side * (spreadX*.45 + Math.random()*spreadX*.55);
+    const midY = dy + (Math.random()-.5)*2*spreadY;
+    const rot  = side * (24 + Math.random()*46);
+    const base = T(j.x, dy + j.y - (state.order.length-pos)*.45, j.r);
+    el.style.zIndex = 100 + (state.order.length - pos);
+    const anim = el.animate([
+      { transform: el.style.transform || base },
+      { transform: T(midX, midY, rot), offset:.42 },
+      { transform: T(midX*.5, midY*.6 - 14, rot*.4), offset:.62 },
+      { transform: base }
+    ], { duration: 620 + Math.random()*260, delay: pos*13, easing:'cubic-bezier(.35,.15,.25,1)' });
+    anim.onfinish = () => {
+      el.style.transform = base;
+      if (++done === state.order.length){
+        shuffling = false;
+        if (state.shuffles === 1) setHint('可以多洗几次，直到心里踏实', '然后凭直觉切牌');
+      }
+    };
+  });
+}
 
-            loader.load(smokeTextureUrl, function(texture) {
-                const smokeGeometry = new THREE.PlaneGeometry(1.8, 1.8);
-                const smokeMaterial = new THREE.MeshBasicMaterial({
-                    map: texture,
-                    transparent: true,
-                    opacity: 0.3,
-                    blending: THREE.NormalBlending,
-                    depthWrite: false,
-                });
+/* ---- cut: split into 3 piles, tapping one puts it on top ---- */
+function doCut(){
+  if (shuffling) return;
+  state.phase = 'cut';
+  stage.className = 'cut';
+  Snd.slide(); buzz(12);
+  $('#deck-glow').classList.add('off');
+  setHint('凭直觉，轻点其中一叠', '它将成为命运的开端');
+  setActions([]);
+  const { w, h } = stageSize();
+  const dy = -h*.02;
+  const px = Math.min(w*.30, 230);
+  const xs = [-px, 0, px];
+  const names = ['壹','贰','叁'];
+  const third = Math.ceil(state.order.length/3);
+  state.order.forEach((ci, pos) => {
+    const el = state.els[ci];
+    const pile = Math.min(2, (pos/third)|0);
+    const inPile = pos - pile*third;
+    el.dataset.pile = pile;
+    el.classList.toggle('pile-top', inPile === 0);
+    if (inPile === 0) el.querySelector('.pile-tag').textContent = names[pile];
+    const j = state.jitter[ci];
+    el.style.transform = T(xs[pile] + j.x, dy + j.y - (third-inPile)*.5, j.r);
+    el.style.zIndex = 100 + (third - inPile);
+  });
+}
+function onPilePicked(pile){
+  Snd.flick(); buzz(14);
+  const chosen = [], rest = [];
+  for (const ci of state.order) (+state.els[ci].dataset.pile === pile ? chosen : rest).push(ci);
+  state.order = chosen.concat(rest);
+  state.els.forEach(el => { el.classList.remove('pile-top'); el.querySelector('.pile-tag').textContent=''; delete el.dataset.pile; });
+  stage.className = '';
+  layoutDeck(false);
+  setHint('命运已然就位', '');
+  setTimeout(fanOut, 820);
+}
 
-                singleSmokeWisp = new THREE.Mesh(smokeGeometry, smokeMaterial);
-                crystalBall.add(singleSmokeWisp);
-            });
-        }
-        function createLights() {
-            const hemiLight = new THREE.HemisphereLight(0xffffff, 0x444444, 0.5);
-            hemiLight.position.set(0, 20, 0);
-            scene.add(hemiLight);
-        }
+/* ---- fan out for picking ---- */
+function fanOut(){
+  state.phase = 'fan';
+  stage.className = 'fan';
+  Snd.riffle(); buzz(10);
+  $('#deck-glow').classList.add('off');
+  document.getElementById('ritual').classList.add('gone-ritual');
+  const need = state.spreadN;
+  setHint(need===1 ? '默想心中之问，选出今日之牌' : '静心默想，依次选出三张牌',
+          need===1 ? 'follow your intuition' : '第一张为过去 · 第二张为现在 · 第三张为未来');
+  setActions([]);
+  layoutFan();
+  updatePickCount();
+}
+function layoutFan(){
+  const { w, h } = stageSize();
+  const n = state.order.length;
+  const cw = state.els[0].offsetWidth;
+  const R = Math.min(520, Math.max(h*.45, w*.55));
+  // widest half-angle that keeps the outermost cards on screen
+  const halfSin = Math.min(.95, Math.max(.25, (w*.5 - cw*.55) / R));
+  const half = Math.min(55, Math.asin(halfSin) * 180/Math.PI);
+  const apexY = h*.64;                       // arc apex (card centre), from stage top
+  const pivotDrop = apexY - h*.5 + R;        // pivot, relative to stage centre
+  state.order.forEach((ci, pos) => {
+    const el = state.els[ci];
+    if (el.classList.contains('gone') || el.classList.contains('placed')) return;
+    const a = -half + 2*half*(pos/(n-1));
+    el.style.zIndex = 100 + pos;
+    el.style.transitionDelay = (pos*22)+'ms';
+    el.style.transform = `translateY(${pivotDrop}px) rotate(${a}deg) translateY(${-R}px)`;
+  });
+  setTimeout(()=> state.els.forEach(el=> el.style.transitionDelay=''), n*22 + 800);
+}
+function updatePickCount(){
+  const need = state.spreadN, got = state.picks.length;
+  pickCountEl.textContent = need>1 ? `✦ ${got} / ${need} ✦` : '';
+  pickCountEl.classList.toggle('show', need>1 && got<need);
+}
 
-        function onWindowResize() {
-            if (!container) return;
-            camera.aspect = container.clientWidth / container.clientHeight;
-            const baseHeight = 280;
-            const baseDistance = 3.8;
-            camera.position.z = baseDistance * (container.clientHeight / baseHeight);
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        }
+function onCardClick(ci){
+  const el = state.els[ci];
+  if (state.phase === 'cut'){
+    if (el.dataset.pile !== undefined) onPilePicked(+el.dataset.pile);
+    return;
+  }
+  if (state.phase === 'fan'){
+    if (el.classList.contains('selected') || el.classList.contains('gone')) return;
+    if (state.picks.length >= state.spreadN) return;
+    const rev = Math.random() < .38;
+    state.picks.push({ i: ci, rev });
+    el.classList.add('selected');
+    Snd.flick(); buzz(16);
+    updatePickCount();
+    if (state.picks.length === state.spreadN) setTimeout(gatherPicks, 420);
+    return;
+  }
+  if (state.phase === 'reveal'){
+    if (!el.classList.contains('placed') || el.classList.contains('flipped')) return;
+    flipCard(state.picks.findIndex(p => p.i === ci));
+  }
+}
 
-        window.expandParticles = () => { targetParticleRadiusMultiplier = 4.0; };
-        window.shrinkParticles = () => { targetParticleRadiusMultiplier = 1.0; };
+/* ---- fly the chosen cards to centre slots ---- */
+function slotTransforms(){
+  const { w, h } = stageSize();
+  const n = state.spreadN;
+  const cw = state.els[0].offsetWidth, ch = state.els[0].offsetHeight;
+  const scale = n===1
+    ? Math.min(1.9, (h*.5)/ch, (w*.6)/cw)
+    : Math.min(1.25, (h*.42)/ch, (w*.29)/cw);
+  const gap = Math.min(w*.32, cw*scale + w*.05);
+  return state.picks.map((_, k) => ({
+    x: n===1 ? 0 : (k-1)*gap,
+    y: -h*.075,
+    scale
+  }));
+}
+function placePicks(lifted){
+  const slots = slotTransforms(), h = stageSize().h;
+  state.picks.forEach((p, k) => {
+    const el = state.els[p.i], s = slots[k];
+    const sc = lifted ? s.scale*.92 : s.scale;
+    el.style.transform = T(s.x, s.y - (lifted ? h*.12 : 0), 0, sc);
+    el.querySelector('.slot-tag').style.transform = `translateX(-50%) scale(${(1/sc).toFixed(3)})`;
+  });
+}
+function gatherPicks(){
+  state.phase = 'reveal';
+  stage.className = 'reveal';
+  setHint('轻触卡牌，揭示指引','');
+  pickCountEl.classList.remove('show');
+  Snd.slide(); buzz(10);
+  const pickedSet = new Set(state.picks.map(p=>p.i));
+  let d = 0;
+  state.order.forEach((ci) => {
+    if (!pickedSet.has(ci)){
+      const el = state.els[ci];
+      el.style.transitionDelay = (d++*10)+'ms';
+      el.classList.add('gone');
+      el.style.transform += ' translateY(60px)';
+    }
+  });
+  state.picks.forEach((p, k) => {
+    const el = state.els[p.i];
+    // build the front face now — orientation was decided at pick time
+    el.querySelector('.face.front').innerHTML = faceSVG(p.i, p.rev);
+    el.querySelector('.slot-tag').textContent = state.spreadN>1 ? POS3[k] : '今日之牌 · YOUR CARD';
+    el.classList.remove('selected');
+    el.classList.add('revealing');
+    el.style.transitionDelay = (k*140)+'ms';
+    el.style.zIndex = 300 + k;
+    setTimeout(()=>{ el.classList.add('placed'); el.style.transitionDelay=''; }, 900 + k*140);
+  });
+  placePicks(false);
+}
 
-        function animate3D() {
-            requestAnimationFrame(animate3D);
-            const elapsedTime = clock.getElapsedTime();
+/* ---- flip & sparkle ---- */
+function flipCard(k){
+  if (k < 0) return;
+  const p = state.picks[k], el = state.els[p.i];
+  el.classList.add('flipped','glowing');
+  Snd.chime(); buzz([12,40,12]);
+  setTimeout(()=> sparkleBurst(el), 380);
+  setTimeout(()=> el.classList.remove('glowing'), 1800);
+  state.flipped++;
+  if (state.flipped === state.picks.length){
+    setTimeout(finishReading, 950);
+  }
+}
+function sparkleBurst(el){
+  const r = el.getBoundingClientRect();
+  const cx = r.left + r.width/2, cy = r.top + r.height/2;
+  for (let i=0;i<22;i++){
+    const s = document.createElement('div');
+    s.className = 'spark';
+    document.body.appendChild(s);
+    const a = Math.random()*Math.PI*2, dist = 60 + Math.random()*130;
+    const sc = .5 + Math.random()*1.3;
+    s.style.left = cx+'px'; s.style.top = cy+'px';
+    s.animate([
+      { transform:`translate(-50%,-50%) scale(${sc})`, opacity:1 },
+      { transform:`translate(calc(-50% + ${Math.cos(a)*dist}px), calc(-50% + ${Math.sin(a)*dist - 30}px)) scale(0)`, opacity:0 }
+    ], { duration: 700 + Math.random()*500, easing:'cubic-bezier(.2,.6,.3,1)' }).onfinish = () => s.remove();
+  }
+}
 
-            const startRadius = (targetParticleRadiusMultiplier > 1.0) ? 1.0 : 2.5; 
-            const endRadius = targetParticleRadiusMultiplier;
-            if (startRadius !== endRadius) {
-                const totalDistance = endRadius - startRadius;
-                const currentDistance = particleRadiusMultiplier - startRadius;
-                const progress = Math.max(0, Math.min(1, currentDistance / totalDistance));
-                const easedFactor = 0.01 + Math.sin(progress * Math.PI) * 0.05;
-                particleRadiusMultiplier = THREE.MathUtils.lerp(particleRadiusMultiplier, targetParticleRadiusMultiplier, easedFactor);
-            }
-            if (particleSystem) {
-                const positions = particleSystem.geometry.attributes.position.array;
-                const timeFactor = elapsedTime * 0.5;
-                for (let i = 0; i < positions.length; i += 3) {
-                    const x = originalParticlePositions[i];
-                    const y = originalParticlePositions[i + 1];
-                    const z = originalParticlePositions[i + 2];
-                    const scale = 1.0 + Math.sin(timeFactor + x * 2.1) * 0.08;
-                    
-                    positions[i] = x * scale * particleRadiusMultiplier;
-                    positions[i + 1] = (y * scale + Math.sin(timeFactor + i) * 0.05) * particleRadiusMultiplier;
-                    positions[i + 2] = z * scale * particleRadiusMultiplier;
-                }
-                particleSystem.geometry.attributes.position.needsUpdate = true;
-                particleSystem.rotation.y = elapsedTime * 0.05;
-            }
-            if (singleSmokeWisp) {
-                singleSmokeWisp.lookAt(camera.position);
-                singleSmokeWisp.position.y = Math.sin(elapsedTime * 0.5) * 0.2;
-                singleSmokeWisp.rotation.z = elapsedTime * 0.1;
-            }
-            controls.update();
-            renderer.render(scene, camera);
-        }
+/* ---- reading sheet ---- */
+function readingHTML(){
+  const advP = state.picks[state.spreadN===1 ? 0 : 1];   // advice from today's / "present" card
+  return state.picks.map((p, k) => {
+    const c = CARDS[p.i];
+    const kws = (p.rev ? c.rkw : c.kw).map(w=>`<span class="r-kw">${w}</span>`).join('');
+    return `<div class="reading">
+      ${state.spreadN>1?`<div class="r-pos">${POS3[k]}</div>`:''}
+      <div class="r-head">
+        <span class="r-name">${c.zh}</span>
+        <span class="r-en">${c.rn} · ${c.en.toUpperCase()}</span>
+        <span class="r-ori ${p.rev?'rev':'up'}">${p.rev?'逆位':'正位'}</span>
+      </div>
+      <div class="r-kws">${kws}</div>
+      <p class="r-text">${p.rev ? c.rev : c.up}</p>
+      ${k===state.picks.length-1?`<div class="r-adv"><b>今日签语</b><br>${CARDS[advP.i].adv}</div>`:''}
+    </div>`;
+  }).join('');
+}
+function showSheet(){
+  sheetBody.innerHTML = readingHTML() + `
+    <div class="sheet-btns">
+      <button class="btn ghost" id="btn-copy">复制签文</button>
+      <button class="btn ghost" id="btn-again">重新占卜</button>
+    </div>`;
+  $('#btn-copy').onclick = copyReading;
+  $('#btn-again').onclick = resetAll;
+  sheet.classList.add('show');
+}
+function finishReading(){
+  setHint('','');
+  Snd.bell();
+  try{ localStorage.setItem(todayKey(), JSON.stringify({ n: state.spreadN, picks: state.picks })); }catch(e){}
+  showSheet();
+  // nudge cards up so the sheet doesn't cover them
+  placePicks(true);
+}
+function copyReading(){
+  const d = new Date();
+  const lines = [`✦ 每日塔罗 ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ✦`];
+  state.picks.forEach((p,k)=>{
+    const c = CARDS[p.i];
+    lines.push(`${state.spreadN>1 ? POS3[k].split(' ')[0]+'：':''}${c.zh}（${p.rev?'逆位':'正位'}）— ${(p.rev?c.rkw:c.kw).join(' / ')}`);
+    lines.push(p.rev ? c.rev : c.up);
+  });
+  const txt = lines.join('\n');
+  (navigator.clipboard ? navigator.clipboard.writeText(txt) : Promise.reject())
+    .then(()=>toast('签文已复制 ✦'))
+    .catch(()=>toast('复制失败，请截图保存'));
+}
 
-        window.init3D = init3D;
-    </script>
+/* ---- phase entries ---- */
+function enterTable(){
+  $('#welcome').classList.add('hidden');
+  $('#table').classList.remove('hidden');
+  sheet.classList.remove('show');
+  document.getElementById('ritual').classList.remove('gone-ritual');
+  $('#deck-glow').classList.remove('off');
+  state.phase = 'deck';
+  buildDeck();
+  setHint('洗牌，把今日的心绪注入牌中', '心中默念想问之事');
+  setActions([
+    { label:'洗 牌', primary:true, on:doShuffle },
+    { label:'切 牌', on:()=>{ if(state.shuffles===0){ toast('先洗一次牌吧 ✦'); return;} doCut(); } },
+    { label:'直接展牌', ghost:true, on:()=>{ if(!shuffling) fanOut(); } },
+  ]);
+}
+function resetAll(){
+  sheet.classList.remove('show');
+  $('#table').classList.add('hidden');
+  $('#welcome').classList.remove('hidden');
+  state.phase = 'welcome';
+  refreshTodayChip();
+}
+function refreshTodayChip(){
+  $('#today-chip').style.display = localStorage.getItem(todayKey()) ? '' : 'none';
+}
+function showSaved(){
+  const saved = localStorage.getItem(todayKey());
+  if (!saved) return;
+  let data; try{ data = JSON.parse(saved); }catch(e){ return; }
+  state.spreadN = data.n;
+  $('#welcome').classList.add('hidden');
+  $('#table').classList.remove('hidden');
+  buildDeck();
+  state.picks = data.picks;
+  state.phase = 'reveal'; state.flipped = data.picks.length;
+  stage.className = 'reveal';
+  document.getElementById('ritual').classList.add('gone-ritual');
+  $('#deck-glow').classList.add('off');
+  setHint('',''); setActions([]);
+  const pickedSet = new Set(data.picks.map(p=>p.i));
+  state.els.forEach((el,ci)=>{ if(!pickedSet.has(ci)){ el.style.transition='none'; el.classList.add('gone'); } });
+  data.picks.forEach((p,k)=>{
+    const el = state.els[p.i];
+    el.querySelector('.face.front').innerHTML = faceSVG(p.i, p.rev);
+    el.querySelector('.slot-tag').textContent = data.n>1 ? POS3[k] : '今日之牌 · YOUR CARD';
+    el.style.transition = 'none';
+    el.style.zIndex = 300+k;
+    el.classList.add('placed','flipped');
+  });
+  placePicks(true);
+  data.picks.forEach(p=>{ const el = state.els[p.i]; void el.offsetWidth; el.style.transition = ''; });
+  showSheet();
+}
 
-    <script>
-    document.addEventListener('DOMContentLoaded', () => {
-        if (typeof window.init3D === 'function') {
-            window.init3D();
-        }
-
-        const screens = { s1: document.getElementById('screen1'), s2: document.getElementById('screen2'), };
-        const buttons = { cabin: document.getElementById('cabin-button'), back: document.getElementById('back-button'), submitBirthday: document.getElementById('submit-birthday'), closeModal: document.getElementById('close-modal'), llmSend: document.getElementById('llm-send-btn'), install: document.getElementById('install-button'), };
-        const inputs = { birthDate: document.getElementById('birthdate-input'), birthTime: document.getElementById('birthtime-input'), timezone: document.getElementById('timezone-input'), llmInput: document.getElementById('llm-input'), };
-        const displays = { infoText: document.getElementById('info-text'), sunSign: document.getElementById('sun-sign'), sunEmoji: document.getElementById('sun-emoji'), moonSign: document.getElementById('moon-sign'), moonEmoji: document.getElementById('moon-emoji'), risingSign: document.getElementById('rising-sign'), risingEmoji: document.getElementById('rising-emoji'), todoList: document.getElementById('todo-list'), completedList: document.getElementById('completed-list'), dailyFortune: document.getElementById('daily-fortune'), luckyColor: document.getElementById('lucky-color'), luckyNumber: document.getElementById('lucky-number'), llmCounter: document.getElementById('llm-counter'), chatWindow: document.getElementById('chat-window'), todayCard: document.getElementById('today-card'), };
-        const overlays = { birthdayForm: document.getElementById('birthday-form'), fortuneModal: document.getElementById('fortune-modal'), };
-        const crystalBallContainer = document.getElementById('crystal-ball-container');
-
-        let deferredPrompt;
-        window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); deferredPrompt = e; buttons.install.style.display = 'block'; });
-        buttons.install.addEventListener('click', () => { buttons.install.style.display = 'none'; if (deferredPrompt) { deferredPrompt.prompt(); deferredPrompt.userChoice.then((choiceResult) => { console.log(`User ${choiceResult.outcome} the install prompt`); deferredPrompt = null; }); } });
-
-        let userData = {};
-        
-        // --- UNIFIED EVENT HANDLING LOGIC ---
-        let holdTimeout, isDragging = false, startX, startY;
-
-        const handleStart = (e) => {
-            isDragging = false;
-            const touch = e.touches ? e.touches[0] : null;
-            startX = touch ? touch.clientX : e.clientX;
-            startY = touch ? touch.clientY : e.clientY;
-
-            const today = new Date().toDateString();
-            if (userData.lastDivinationDate === today && userData.todayDivination) {
-                const infoEl = displays.infoText;
-                infoEl.classList.add('golden-glow');
-                setTimeout(() => infoEl.classList.remove('golden-glow'), 1500);
-                return;
-            }
-
-            crystalBallContainer.classList.add('holding');
-            if ('vibrate' in navigator) {
-                navigator.vibrate(1200);
-            }
-            if (window.expandParticles) window.expandParticles();
-
-            holdTimeout = setTimeout(async () => {
-                if (isDragging) return;
-
-                crystalBallContainer.classList.remove('holding');
-
-                displays.infoText.textContent = "Gazing into the future...";
-                try {
-                    const response = await fetch('https://api.spirit-vitamin.com/api/divine', {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json', 'X-API-Key': 'fortunetell-a9b8c7d6e5f4', 'X-User-ID': userData.userId },
-                        body: JSON.stringify({ lang: getCurrentLang() })
-                    });
-
-                    if (!response.ok) {
-                        const errData = await response.json();
-                        throw new Error(errData.error || `Server responded with ${response.status}`);
-                    }
-
-                    const result = await response.json();
-                    const todayString = new Date().toDateString();
-                    userData.lastDivinationDate = todayString;
-                    userData.todayDivination = result;
-                    saveUserData();
-                    displayFortune(result);
-
-                } catch (error) {
-                    console.error("Failed to get divination:", error);
-                    displays.infoText.textContent = `The spirits are unclear... (${error.message})`;
-                    if(window.shrinkParticles) window.shrinkParticles();
-                }
-            }, 1200);
-        };
-        const handleMove = (e) => {
-            if (e.touches && e.touches.length > 1) return;
-            const touch = e.touches ? e.touches[0] : null;
-            const currentX = touch ? touch.clientX : e.clientX;
-            const currentY = touch ? touch.clientY : e.clientY;
-            if (Math.abs(currentX - startX) > 5 || Math.abs(currentY - startY) > 5) {
-                if (!isDragging) { isDragging = true; stopHolding(); }
-            }
-        };
-        const handleEnd = () => { stopHolding(); };
-        const stopHolding = () => {
-            clearTimeout(holdTimeout);
-            crystalBallContainer.classList.remove('holding');
-            if ('vibrate' in navigator) {
-                navigator.vibrate(0);
-            }
-            if(window.shrinkParticles) window.shrinkParticles();
-        };
-        // --- MULTI-LANGUAGE IMPLEMENTATION ---
-        const translations = {
-            'en': { 'title': 'Daily Divination', 'cabin-button-title': 'Enter Cabin', 'info-text-initial': 'Touch the crystal ball to reveal your trajectory today.', 'info-text-done': 'You have already divined today. This is your card.', 'info-text-tired': 'The crystal ball is tired, come back tomorrow!', 'info-text-thanks': 'Thank you. You can now begin your divination.', 'today-card-title': "Today's Fortune", 'lucky-color-label': "Lucky Color", 'lucky-number-label': "Lucky Number", 'birthday-form-title': 'Magic Needs Your Moment of Birth', 'submit-birthday-btn': 'Confirm Time', 'fortune-modal-title': "Today's Fortune", 'close-modal-btn': 'I Understand', 'install-button': 'Install App', 's2-card1-title': 'Your Star Chart', 'sun-sign-label': 'Sun Sign', 'sun-sign-desc': 'Core Self', 'moon-sign-label': 'Moon Sign', 'moon-sign-desc': 'Inner Emotions', 'rising-sign-label': 'Rising Sign', 'rising-sign-desc': 'Social Persona', },
-            'zh-CN': { 'title': '每日占卜', 'cabin-button-title': '进入小屋', 'info-text-initial': '轻触水晶球，揭示你今日的命运轨迹。', 'info-text-done': '今天你已经占卜过了，这是你的今日卡片。', 'info-text-tired': '水晶球累了，明天再来吧！', 'info-text-thanks': '感谢你，现在可以开始占卜了。', 'today-card-title': '今日运势', 'lucky-color-label': '幸运色', 'lucky-number-label': '幸运数字', 'birthday-form-title': '魔法需要你的诞生时刻', 'submit-birthday-btn': '确认时刻', 'fortune-modal-title': '今日运势', 'close-modal-btn': '我明白了', 'install-button': '安装应用', 's2-card1-title': '你的星辰图谱', 'sun-sign-label': '太阳星座', 'sun-sign-desc': '核心自我', 'moon-sign-label': '月亮星座', 'moon-sign-desc': '内在情绪', 'rising-sign-label': '上升星座', 'rising-sign-desc': '社交面具', }
-        };
-
-        function setLanguage(lang) {
-            if (!translations[lang]) return;
-            localStorage.setItem('divinationAppLang', lang);
-            document.querySelectorAll('[data-translate-key]').forEach(el => {
-                const key = el.getAttribute('data-translate-key');
-                const prop = el.getAttribute('data-translate-prop') || 'textContent';
-                if (translations[lang][key]) el[prop] = translations[lang][key];
-            });
-            document.querySelectorAll('#language-selector .lang-option').forEach(opt => {
-                opt.classList.toggle('active', opt.getAttribute('data-lang') === lang);
-            });
-            displayTodayCard(); 
-        }
-
-        function getCurrentLang() { return localStorage.getItem('divinationAppLang') || 'zh-CN'; }
-        
-        let saveTimeout;
-        const debouncedSaveUserData = () => {
-            clearTimeout(saveTimeout);
-            saveTimeout = setTimeout(() => {
-                saveUserData();
-            }, 300);
-        };
-        
-        function saveUserData() { 
-            localStorage.setItem('divinationAppUser', JSON.stringify(userData));
-            console.log("User data saved.");
-        }
-        
-        function loadUserData() {
-            const defaultData = { userId: null, birthDate: null, birthTime: null, timezone: null, lastDivinationDate: null, todayDivination: null, lastTodoListUpdate: null, weeklyTodos: [], lastChatDate: null, chatCount: 0, conversationHistory: [] };
-            const storedData = JSON.parse(localStorage.getItem('divinationAppUser')) || {};
-            userData = { ...defaultData, ...storedData };
-            if (!userData.userId) { 
-                userData.userId = `user_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`; 
-                saveUserData();
-            }
-        }
-        
-        function initialize() { 
-            loadUserData();
-            populateTimezoneSelect();
-            setupEventListeners();
-            const savedLang = getCurrentLang();
-            setLanguage(savedLang); 
-            checkInitialState(); 
-            renderChatHistory();
-        }
-
-        function populateTimezoneSelect() {
-            const timezones = { "UTC-12":-12, "UTC-11":-11, "UTC-10 (夏威夷)":-10, "UTC-9":-9, "UTC-8 (太平洋时间)":-8, "UTC-7 (山区时间)":-7, "UTC-6 (中部时间)":-6, "UTC-5 (东部时间)":-5, "UTC-4":-4, "UTC-3":-3, "UTC-2":-2, "UTC-1":-1, "UTC+0 (格林威治)":0, "UTC+1 (中欧)":1, "UTC+2":2, "UTC+3":3, "UTC+4":4, "UTC+5":5, "UTC+6":6, "UTC+7":7, "UTC+8 (北京/香港)":8, "UTC+9 (东京)":9, "UTC+10":10, "UTC+11":11, "UTC+12":12 };
-            for(const [name, offset] of Object.entries(timezones)){ const option = new Option(name, offset); if (parseInt(offset) === 8) option.selected = true; inputs.timezone.add(option); }
-            if(userData.timezone) inputs.timezone.value = userData.timezone;
-        }
-        
-        // FIX: Replaced with a more robust state check to prevent users from getting stuck.
-        function checkInitialState() {
-            const today = new Date().toDateString();
-            let needsSave = false;
-        
-            // If it's a new day OR if the data for today is incomplete, reset the daily state.
-            if (userData.lastDivinationDate !== today || !userData.todayDivination) {
-                if (userData.lastDivinationDate || userData.todayDivination) {
-                    userData.lastDivinationDate = null;
-                    userData.todayDivination = null;
-                    needsSave = true;
-                }
-            }
-        
-            if (userData.lastChatDate !== today) { 
-                userData.chatCount = 0; 
-                userData.lastChatDate = today; 
-                needsSave = true;
-            }
-            
-            if (needsSave) saveUserData();
-        
-            if (!userData.birthDate || !userData.birthTime) {
-                overlays.birthdayForm.classList.remove('hidden');
-            } else {
-                overlays.birthdayForm.classList.add('hidden');
-                displayProfileData();
-            }
-            
-            displayTodayCard(); 
-            updateLLMCounter();
-        }
-
-        function displayTodayCard() {
-            const today = new Date().toDateString();
-            const lang = getCurrentLang();
-            const langKey = lang === 'zh-CN' ? 'zh' : 'en';
-            const colorNameKey = lang === 'zh-CN' ? 'zh_name' : 'en_name';
-
-            if (userData.lastDivinationDate === today && userData.todayDivination) {
-                const divinationData = userData.todayDivination;
-                const luckyColorLabel = translations[lang]['lucky-color-label'] || 'Lucky Color';
-                const luckyNumberLabel = translations[lang]['lucky-number-label'] || 'Lucky Number';
-                const cardTitle = translations[lang]['today-card-title'] || "Today's Fortune";
-
-                console.log("divinationData",divinationData);
-                displays.todayCard.innerHTML = `
-                    <h3>${cardTitle}</h3>
-                    <p>${divinationData.fortune[langKey]}</p>
-                    <div class="lucky-elements">
-                        <div>${luckyColorLabel}: ${divinationData.luckyColor[colorNameKey]} <span class="color-swatch" style="background-color: ${divinationData.luckyColor.hex};"></span></div>
-                        <div>${luckyNumberLabel}: ${divinationData.luckyNumber}</div>
-                    </div>
-                `;
-                
-                displays.todayCard.classList.remove('hidden');
-                displays.infoText.textContent = translations[lang]['info-text-done'];
-            } else {
-                displays.todayCard.classList.add('hidden');
-                displays.infoText.textContent = translations[lang]['info-text-initial'];
-            }
-        }
-        function updateLLMCounter() { displays.llmCounter.textContent = `今日剩余对话次数: ${88 - userData.chatCount}`; buttons.llmSend.disabled = userData.chatCount >= 88; }
-        
-        function setupEventListeners() {
-            document.getElementById('language-selector').addEventListener('click', (e) => {
-                e.preventDefault();
-                const target = e.target.closest('.lang-option');
-                if (target) setLanguage(target.getAttribute('data-lang'));
-            });
-
-            buttons.cabin.addEventListener('click', () => { if (!userData.birthDate) { overlays.birthdayForm.classList.remove('hidden'); return; } screens.s1.classList.add('hidden'); screens.s2.classList.remove('hidden'); });
-            buttons.back.addEventListener('click', () => { screens.s2.classList.add('hidden'); screens.s1.classList.remove('hidden'); });
-            buttons.submitBirthday.addEventListener('click', () => { 
-                if (inputs.birthDate.value && inputs.birthTime.value) { 
-                    userData.birthDate = inputs.birthDate.value; 
-                    userData.birthTime = inputs.birthTime.value; 
-                    userData.timezone = inputs.timezone.value; 
-                    overlays.birthdayForm.classList.add('hidden'); 
-                    displays.infoText.textContent = translations[getCurrentLang()]['info-text-thanks']; 
-                    displayProfileData(); 
-                    saveUserData();
-                } 
-            });
-            
-            crystalBallContainer.addEventListener('mousedown', handleStart);
-            crystalBallContainer.addEventListener('mousemove', handleMove);
-            crystalBallContainer.addEventListener('mouseup', handleEnd);
-            crystalBallContainer.addEventListener('mouseleave', handleEnd);
-            crystalBallContainer.addEventListener('touchstart', handleStart, { passive: true });
-            crystalBallContainer.addEventListener('touchmove', handleMove, { passive: true });
-            crystalBallContainer.addEventListener('touchend', handleEnd);
-            crystalBallContainer.addEventListener('touchcancel', handleEnd);
-
-            /*crystalBallContainer.addEventListener('click', async () => {
-                if (isDragging) return;
-                const today = new Date().toDateString();
-                if (userData.lastDivinationDate === today && userData.todayDivination) {
-                    const infoEl = displays.infoText;
-                    infoEl.classList.add('golden-glow');
-                    setTimeout(() => {
-                        infoEl.classList.remove('golden-glow');
-                    }, 1500);
-                    return;
-                }
-                
-            });*/
-
-            buttons.closeModal.addEventListener('click', () => { 
-                overlays.fortuneModal.classList.add('hidden'); 
-                displayTodayCard(); 
-            });
-            buttons.llmSend.addEventListener('click', handleLLMSubmit);
-            inputs.llmInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') handleLLMSubmit(); });
-        }
-
-        function displayFortune(divinationData) {
-            const lang = getCurrentLang();
-            const langKey = lang === 'zh-CN' ? 'zh' : 'en';
-            const colorNameKey = lang === 'zh-CN' ? 'zh_name' : 'en_name';
-            displays.dailyFortune.textContent = divinationData.fortune[langKey];
-            const luckyColorLabel = translations[lang]['lucky-color-label'] || 'Lucky Color';
-            const luckyNumberLabel = translations[lang]['lucky-number-label'] || 'Lucky Number';
-            displays.luckyColor.innerHTML = `${luckyColorLabel}: ${divinationData.luckyColor[colorNameKey]} <span class="color-swatch" style="background-color: ${divinationData.luckyColor.hex};"></span>`;
-            displays.luckyNumber.textContent = `${luckyNumberLabel}: ${divinationData.luckyNumber}`;
-            overlays.fortuneModal.classList.remove('hidden');
-            displayTodayCard();
-        }
-
-        function handleTodoChange(event) {
-            const todoId = parseFloat(event.target.dataset.id);
-            const todo = userData.weeklyTodos.find(t => t.id === todoId);
-            if (todo) { todo.completed = event.target.checked; debouncedSaveUserData(); renderTodos(); }
-        }
-
-        function addMessageToChat(messageObject) {
-            const { sender, text, suggestions } = messageObject;
-            const messageEl = document.createElement('div');
-            messageEl.classList.add('chat-message', sender);
-            const bubble = document.createElement('div');
-            bubble.classList.add('bubble');
-            bubble.textContent = text;
-            if (suggestions && suggestions.length > 0) {
-                const suggestionCard = document.createElement('div');
-                suggestionCard.className = 'suggestion-card';
-                suggestionCard.innerHTML = `<h4>为你推荐的路径：</h4><ul>${suggestions.map(s => `<li>✧ ${s}</li>`).join('')}</ul>`;
-                const acceptBtn = document.createElement('button');
-                acceptBtn.className = 'btn-primary btn-accept';
-                acceptBtn.textContent = '接受建议';
-                acceptBtn.onclick = () => {
-                    const newTodos = suggestions.map(sText => ({ id: Date.now() + Math.random(), text: sText, completed: false }));
-                    userData.weeklyTodos.push(...newTodos);
-                    saveUserData();
-                    renderTodos();
-                    acceptBtn.textContent = '已添加';
-                    acceptBtn.disabled = true;
-                };
-                suggestionCard.appendChild(acceptBtn);
-                bubble.appendChild(suggestionCard);
-            }
-            messageEl.appendChild(bubble);
-            displays.chatWindow.appendChild(messageEl);
-            displays.chatWindow.scrollTop = displays.chatWindow.scrollHeight;
-        }
-
-        function renderChatHistory() {
-            displays.chatWindow.innerHTML = '';
-            userData.conversationHistory.forEach(addMessageToChat);
-        }
-        
-        async function handleLLMSubmit() {
-            const userInput = inputs.llmInput.value.trim();
-            if (userData.chatCount >= 88 || !userInput) return;
-            const userMessage = { sender: 'user', text: userInput, suggestions: null };
-            addMessageToChat(userMessage);
-            userData.conversationHistory.push(userMessage);
-            userData.chatCount++;
-            saveUserData();
-            updateLLMCounter();
-            inputs.llmInput.value = "";
-            buttons.llmSend.disabled = true;
-            try {
-                const secureBackendUrl = 'https://api.spirit-vitamin.com/api/chat'; 
-                const apiKey = 'fortunetell-a9b8c7d6e5f4';
-                const historyToPass = userData.conversationHistory.map(m => m.text);
-                const response = await fetch(secureBackendUrl, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-API-Key': apiKey, 'X-User-ID': userData.userId },
-                    body: JSON.stringify({ prompt: userInput, conversationHistory: historyToPass })
-                });
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || `Request failed with status: ${response.status}`);
-                }
-                const data = await response.json();
-                const lilliaMessage = { sender: 'lillia', text: data.reply, suggestions: data.suggestions };
-                addMessageToChat(lilliaMessage);
-                userData.conversationHistory.push(lilliaMessage);
-                saveUserData();
-            } catch (error) {
-                console.error("API Call Error:", error);
-                addMessageToChat({ sender: 'lillia', text: `连接Lillia的魔法失败了。 ${error.message}` });
-            } finally {
-                buttons.llmSend.disabled = userData.chatCount >= 88;
-            }
-        }
-
-        function displayProfileData() {
-            if (!userData.birthDate) return;
-            const birthDateTime = new Date(`${userData.birthDate}T${userData.birthTime}`);
-            const [sunSign, sunEmoji] = getSunSign(birthDateTime);
-            const [moonSign, moonEmoji] = getMoonSign(birthDateTime);
-            const [risingSign, risingEmoji] = getRisingSign(birthDateTime, parseInt(userData.timezone));
-            displays.sunSign.textContent = sunSign; displays.sunEmoji.textContent = sunEmoji;
-            displays.moonSign.textContent = moonSign; displays.moonEmoji.textContent = moonEmoji;
-            displays.risingSign.textContent = risingSign; displays.risingEmoji.textContent = risingEmoji;
-            generateAndDisplayTodos();
-        }
-
-        function renderTodos() {
-            displays.todoList.innerHTML = ''; displays.completedList.innerHTML = '';
-            if (!userData.weeklyTodos) userData.weeklyTodos = [];
-            userData.weeklyTodos.forEach(todo => {
-                const li = document.createElement('li');
-                const checkboxId = `todo-${todo.id}`;
-                li.innerHTML = `<input type="checkbox" id="${checkboxId}" data-id="${todo.id}" ${todo.completed ? 'checked' : ''}><label for="${checkboxId}">${todo.text}</label>`;
-                if (todo.completed) { displays.completedList.appendChild(li); } else { displays.todoList.appendChild(li); }
-            });
-            document.querySelectorAll('.todo-list input[type="checkbox"]').forEach(checkbox => { checkbox.addEventListener('change', handleTodoChange); });
-        }
-        
-        function generateAndDisplayTodos() {
-            const today = new Date(); const lastUpdate = new Date(userData.lastTodoListUpdate || 0);
-            const isMonday = today.getDay() === 1; const oneWeek = 6 * 24 * 60 * 60 * 1000;
-            if (isMonday && (today - lastUpdate > oneWeek)) {
-                console.log("It's Monday! Clearing conversation history and old tasks.");
-                userData.conversationHistory = [];
-                userData.weeklyTodos = userData.weeklyTodos.filter(todo => !todo.completed); // Keep uncompleted tasks
-                userData.lastTodoListUpdate = today.toISOString();
-                saveUserData();
-            }
-            renderTodos();
-        }
-        
-        const SIGNS = [
-        ["摩羯座", "♑️"], // Capricorn, Index 0
-        ["水瓶座", "♒️"], // Aquarius, Index 1
-        ["双鱼座", "♓️"], // Pisces,   Index 2
-        ["白羊座", "♈️"], // Aries,    Index 3
-        ["金牛座", "♉️"], // Taurus,   Index 4
-        ["双子座", "♊️"], // Gemini,   Index 5
-        ["巨蟹座", "♋️"], // Cancer,   Index 6
-        ["狮子座", "♌️"], // Leo,      Index 7
-        ["处女座", "♍️"], // Virgo,    Index 8
-        ["天秤座", "♎️"], // Libra,    Index 9
-        ["天蝎座", "♏️"], // Scorpio,  Index 10
-        ["射手座", "♐️"], // Sagittarius, Index 11
-        ];
-
-        function getSunSign(date) {
-        const m = date.getMonth() + 1;
-        const d = date.getDate();
-        if ((m === 1 && d >= 20) || (m === 2 && d <= 18)) return SIGNS[1]; // Aquarius
-        if ((m === 2 && d >= 19) || (m === 3 && d <= 20)) return SIGNS[2]; // Pisces
-        if ((m === 3 && d >= 21) || (m === 4 && d <= 19)) return SIGNS[3]; // Aries
-        if ((m === 4 && d >= 20) || (m === 5 && d <= 20)) return SIGNS[4]; // Taurus
-        if ((m === 5 && d >= 21) || (m === 6 && d <= 21)) return SIGNS[5]; // Gemini
-        if ((m === 6 && d >= 22) || (m === 7 && d <= 22)) return SIGNS[6]; // Cancer
-        if ((m === 7 && d >= 23) || (m === 8 && d <= 22)) return SIGNS[7]; // Leo
-        if ((m === 8 && d >= 23) || (m === 9 && d <= 22)) return SIGNS[8]; // Virgo
-        if ((m === 9 && d >= 23) || (m === 10 && d <= 23)) return SIGNS[9]; // Libra
-        if ((m === 10 && d >= 24) || (m === 11 && d <= 22)) return SIGNS[10]; // Scorpio
-        if ((m === 11 && d >= 23) || (m === 12 && d <= 21)) return SIGNS[11]; // Sagittarius
-        if ((m === 12 && d >= 22) || (m === 1 && d <= 19)) return SIGNS[0]; // Capricorn
-        return SIGNS[0]; // Fallback
-        }
-
-        function getMoonSign(date) {
-            const dayOfYear = Math.floor((date - new Date(date.getFullYear(), 0, 0)) / 86400000);
-            const signIndex = Math.floor((dayOfYear / 2.5) + date.getDay()) % 12;
-            return SIGNS[signIndex];
-        }
-
-        function getRisingSign(date, timezoneOffset) {
-            const utcHour = date.getUTCHours();
-            const localHour = (utcHour + timezoneOffset + 24) % 24;
-            const ARIES_INDEX = 3; 
-            const signsToAdvance = Math.floor(localHour / 2);
-            const signIndex = (ARIES_INDEX + signsToAdvance) % 12;
-            return SIGNS[signIndex];
-        }
-
-        initialize();
-    });
-    </script>
+/* ---- wire up ---- */
+document.querySelectorAll('.spread-opt').forEach(opt => {
+  opt.addEventListener('click', () => {
+    document.querySelectorAll('.spread-opt').forEach(o=>o.classList.remove('on'));
+    opt.classList.add('on');
+    state.spreadN = +opt.dataset.n;
+    Snd.flick();
+  });
+});
+$('#btn-start').addEventListener('click', () => { Snd.warm(); Snd.slide(); enterTable(); });
+$('#today-chip').addEventListener('click', showSaved);
+const st = $('#sound-toggle');
+function paintSound(){ st.textContent = Snd.muted ? '∅' : '♪'; st.style.opacity = Snd.muted ? .5 : 1; }
+st.addEventListener('click', () => { Snd.toggle(); paintSound(); });
+paintSound();
+addEventListener('pointerdown', () => Snd.warm(), { once:true });
+addEventListener('resize', () => {
+  if (state.phase === 'fan') layoutFan();
+  else if (state.phase === 'deck') layoutDeck(true);
+  else if (state.phase === 'reveal' && state.picks.length){
+    placePicks(state.flipped === state.picks.length);
+  }
+});
+refreshTodayChip();
+</script>
 </body>
 </html>

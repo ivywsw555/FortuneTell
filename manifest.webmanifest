@@ -1,11 +1,11 @@
 {
-  "name": "Daily Divination | 3D Crystal Ball",
-  "short_name": "Divination",
+  "name": "每日塔罗 | Daily Tarot",
+  "short_name": "每日塔罗",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#2c1f1f",
-  "theme_color": "#2c1f1f",
-  "description": "A daily divination app with a 3D crystal ball.",
+  "background_color": "#0d0a1f",
+  "theme_color": "#0d0a1f",
+  "description": "A beautiful daily tarot ritual — shuffle, cut, fan out and pick your card of the day.",
   "icons": [
     {
       "src": "icon-192x192.png",
