@@ -226,6 +226,16 @@ body{
 .r-kw{ font-size:12px; color:var(--gold-dim); border:1px solid rgba(232,199,111,.3); border-radius:999px;
   padding:3px 12px; letter-spacing:.08em; background:rgba(232,199,111,.05); }
 .r-text{ font-size:14.5px; line-height:1.9; color:var(--ink); text-align:justify; letter-spacing:.02em; }
+.r-essence{ text-align:center; font-size:12.5px; font-style:italic; color:var(--gold-dim);
+  line-height:1.75; letter-spacing:.03em; margin:-2px auto 11px; max-width:92%; }
+.r-essence b{ display:block; font-style:normal; font-weight:600; font-family:Cinzel,serif;
+  font-size:10px; letter-spacing:.3em; text-indent:.3em; color:rgba(232,199,111,.55); margin-bottom:3px; }
+.r-link{ margin-top:11px; font-size:13.5px; line-height:1.85; color:var(--ink); letter-spacing:.02em;
+  background:rgba(232,199,111,.06); border-left:2px solid rgba(232,199,111,.5);
+  border-radius:0 10px 10px 0; padding:9px 13px 9px 15px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.06); }
+.r-link b{ display:block; font-size:10.5px; font-weight:600; letter-spacing:.24em;
+  color:var(--gold-dim); margin-bottom:4px; font-family:Cinzel,serif; }
 .sheet-btns{ display:flex; justify-content:center; gap:12px; margin-top:6px; padding-top:14px;
   border-top:1px solid rgba(232,199,111,.18); flex-wrap:wrap; }
 
@@ -905,6 +915,7 @@ en:{
   up:"Upright", rev:"Reversed",
   oracle:"ORACLE'S WHISPER", oAI:"✨ on-device AI", oClassic:"✦ house oracle", oWait:"The oracle is contemplating…",
   yourQ:"Your question",
+  essence:"Card Meaning", forQ:"For Your Question", forDay:"For Your Day",
   copy:"Copy Reading", again:"New Reading",
   copied:"Reading copied ✦", copyFail:"Copy failed — take a screenshot",
   piles:["I","II","III"],
@@ -931,6 +942,7 @@ zh:{
   up:"正位", rev:"逆位",
   oracle:"神谕低语", oAI:"✨ 本地 AI", oClassic:"✦ 经典签文", oWait:"神谕正在凝思…",
   yourQ:"你的问题",
+  essence:"牌意本义", forQ:"结合你的问题", forDay:"今日启示",
   copy:"复制签文", again:"重新占卜",
   copied:"签文已复制 ✦", copyFail:"复制失败，请截图保存",
   piles:["壹","贰","叁"],
@@ -941,6 +953,33 @@ const KW = (c,rev) => state.lang==='en' ? (rev?c.kwR:c.kwU) : (rev?c.kwRz:c.kwUz
 const MEAN = (c,rev) => state.lang==='en' ? (rev?c.revE:c.upE) : (rev?c.revZ:c.upZ);
 const ADV = c => state.lang==='en' ? c.advE : c.advZ;
 const TH = c => state.lang==='en' ? c.thE : c.thZ;
+
+/* classical (textbook) meaning of each card, shown as its own line */
+const ESSENCE = [
+{e:"Innocence, new beginnings and a free spirit — stepping into the unknown with trust.", z:"纯真、新的开始与自由的灵魂——带着信任踏入未知。"},
+{e:"Willpower, resourcefulness and manifestation — turning intention into reality.", z:"意志、资源与显化——把念头变为现实。"},
+{e:"Intuition, the subconscious and hidden knowledge — wisdom that speaks in silence.", z:"直觉、潜意识与隐秘的知识——在静默中言说的智慧。"},
+{e:"Abundance, nurture and creation — what is tended, grows.", z:"丰饶、滋养与创造——用心照料之物自会生长。"},
+{e:"Authority, structure and stability — order that protects what it governs.", z:"权威、结构与稳定——以秩序护佑所辖之物。"},
+{e:"Tradition, guidance and shared belief — learning through the established path.", z:"传统、教导与共同信念——经由既有之路学习。"},
+{e:"Love, harmony and the choices of the heart — union built on shared values.", z:"爱、和谐与心之抉择——建立在共同价值上的结合。"},
+{e:"Determination, control and victory — willpower steering opposing forces forward.", z:"决心、掌控与胜利——以意志驾驭相反之力前行。"},
+{e:"Courage, compassion and inner power — taming the lion with a gentle hand.", z:"勇气、慈悲与内在力量——以温柔之手驯服雄狮。"},
+{e:"Introspection, solitude and inner guidance — seeking truth by one's own lamplight.", z:"内省、独处与内在指引——提灯独行，向内寻真。"},
+{e:"Cycles, destiny and turning points — fortune rises and falls in its season.", z:"周期、命运与转折点——时运自有起落。"},
+{e:"Fairness, truth and cause-and-effect — every action is weighed on the scale.", z:"公平、真相与因果——一切作为终上天平。"},
+{e:"Suspension, surrender and a new perspective — gaining by letting go.", z:"悬停、臣服与新视角——以放手而有所得。"},
+{e:"Endings, transformation and rebirth — the old clears so the new may live.", z:"结束、蜕变与重生——旧去方能新来。"},
+{e:"Balance, moderation and alchemy — opposites blended into harmony.", z:"平衡、适度与调和——将对立熔炼为和谐。"},
+{e:"Attachment, desire and the shadow — chains that hold only while we grip them.", z:"执念、欲望与阴影——锁链因紧握而存在。"},
+{e:"Sudden upheaval and revelation — false structures struck down in a flash.", z:"骤变与启示——虚假的结构在电光中倾塌。"},
+{e:"Hope, healing and inspiration — calm starlight after the storm.", z:"希望、疗愈与启迪——风暴之后的宁静星光。"},
+{e:"Illusion, dreams and the subconscious — a path walked by uncertain light.", z:"幻象、梦境与潜意识——于朦胧月色中前行。"},
+{e:"Joy, vitality and success — everything is clear in full daylight.", z:"喜悦、活力与成功——日光之下，一切明朗。"},
+{e:"Awakening, reckoning and renewal — answering the call to rise.", z:"觉醒、审视与新生——回应起身的召唤。"},
+{e:"Completion, integration and fulfilment — the circle danced to its close.", z:"圆满、整合与达成——循环之舞圆满落幕。"}
+];
+const ES = i => state.lang==='en' ? ESSENCE[i].e : ESSENCE[i].z;
 
 /* ============================================================
    Ambient sky: stars + drifting gold dust
@@ -1538,6 +1577,7 @@ function sparkleBurst(el){
 /* ---- reading sheet ---- */
 function readingHTML(){
   const en = state.lang === 'en';
+  const dom = Oracle.domain(state.question);
   const cards = state.picks.map((p, k) => {
     const c = CARDS[p.i];
     const kws = KW(c, p.rev).map(w=>`<span class="r-kw">${w}</span>`).join('');
@@ -1551,7 +1591,9 @@ function readingHTML(){
         <span class="r-ori ${p.rev?'rev':'up'}">${p.rev?L().rev:L().up}</span>
       </div>
       <div class="r-kws">${kws}</div>
+      <div class="r-essence"><b>${L().essence}</b>${ES(p.i)}</div>
       <p class="r-text">${MEAN(c, p.rev)}</p>
+      <div class="r-link"><b>✧ ${state.question ? L().forQ : L().forDay}</b>${Oracle.domainLine(dom, c, p.rev, state.lang)}</div>
     </div>`;
   }).join('');
   const q = state.question
@@ -1633,11 +1675,14 @@ function copyReading(){
   const d = new Date();
   const lines = [`✦ Daily Tarot · ${d.getFullYear()}.${d.getMonth()+1}.${d.getDate()} ✦`];
   if (state.question) lines.push(`${L().yourQ}: ${state.question}`);
+  const dom = Oracle.domain(state.question);
   state.picks.forEach((p,k)=>{
     const c = CARDS[p.i];
     const pos = state.spreadN>1 ? `${L().posN[k]}: ` : '';
     lines.push(`${pos}${N(c)} (${p.rev?L().rev:L().up}) — ${KW(c,p.rev).join(' / ')}`);
+    lines.push(`${L().essence}: ${ES(p.i)}`);
     lines.push(MEAN(c, p.rev));
+    lines.push(`${state.question ? L().forQ : L().forDay}: ${Oracle.domainLine(dom, c, p.rev, state.lang)}`);
   });
   if (state.oracleText && state.oracleText.text){
     lines.push(`— ${L().oracle} —`);
